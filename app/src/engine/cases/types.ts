@@ -1,4 +1,4 @@
-import type { AttributeDef, Condition, PublicCase } from '../../shared/types';
+import type { AttributeDef, Condition, PublicCase } from '../../../shared/types';
 
 export type CardType = 'clue' | 'deadend' | 'planted' | 'bonus';
 export type BonusEffect = 'token' | 'move' | 'peek';

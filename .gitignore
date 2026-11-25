@@ -1,6 +1,4 @@
 .DS_Store
 node_modules/
 app/dist/
-app/.games.json
-app/.games.json.tmp
 .claude/settings.local.json

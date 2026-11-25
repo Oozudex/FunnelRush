@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import type { Session } from '../../shared/types';
-import { emit, persist, store } from '../socket';
+import { createGame, joinGame, persist, store } from '../socket';
 import { Logo } from '../ui';
 
-export default function Home({ onSession, toast, connected }: { onSession: (s: Session) => void; toast: (m: string) => void; connected: boolean }) {
+export default function Home({ onSession, toast }: { onSession: (s: Session) => void; toast: (m: string) => void }) {
   const initialCode = new URLSearchParams(window.location.search).get('join') ?? '';
   const [mode, setMode] = useState<'menu' | 'create' | 'join'>(initialCode ? 'join' : 'menu');
   const [name, setName] = useState<string>(store('tlq.name', ''));
@@ -15,9 +15,7 @@ export default function Home({ onSession, toast, connected }: { onSession: (s: S
     persist('tlq.name', name.trim());
     try {
       const s =
-        mode === 'create'
-          ? await emit<Session>('game:create', { name })
-          : await emit<Session>('game:join', { code, name });
+        mode === 'create' ? await createGame(name) : await joinGame(code, name);
       onSession(s);
     } catch (e) {
       toast((e as Error).message);
@@ -32,11 +30,6 @@ export default function Home({ onSession, toast, connected }: { onSession: (s: S
         <Logo />
       </div>
       <p className="home-tag pix">Police Console · W.A.T.S.O.N. terminal</p>
-      {!connected && (
-        <p className="small amber center" role="status">
-          Waking up the W.A.T.S.O.N. server… (up to 1 minute the first time)
-        </p>
-      )}
 
       {mode === 'menu' && (
         <div className="stack">
@@ -95,7 +88,7 @@ export default function Home({ onSession, toast, connected }: { onSession: (s: S
             />
           </div>
           <button className="btn primary big block" disabled={busy || name.trim().length < 2 || (mode === 'join' && code.trim().length < 4)}>
-            {busy ? 'Connecting…' : mode === 'create' ? 'Create & get a code' : 'Join'}
+            {busy ? (mode === 'create' ? 'Opening the line…' : 'Calling the host…') : mode === 'create' ? 'Create & get a code' : 'Join'}
           </button>
           <button type="button" className="btn ghost block" onClick={() => setMode('menu')}>
             Back

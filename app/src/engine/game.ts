@@ -1,9 +1,13 @@
-import { randomBytes, randomUUID } from 'node:crypto';
-import { buildSql, describe, matches } from '../shared/sql';
+// crypto.getRandomValues works on plain http too (randomUUID needs https)
+function randomHex(n: number) {
+  return Array.from(crypto.getRandomValues(new Uint8Array(n)), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+const randomUUID = () => randomHex(16);
+import { buildSql, describe, matches } from '../../shared/sql';
 import type {
   Condition, EvidenceItem, GameState, LogKind, Pawn, PrivateState, PublicPlayer, QueryRecord, ScanResult, View,
-} from '../shared/types';
-import { PAWNS } from '../shared/types';
+} from '../../shared/types';
+import { PAWNS } from '../../shared/types';
 import { CASES } from './cases';
 import { publicCase, type CaseDef } from './cases/types';
 
@@ -58,7 +62,7 @@ export class Game {
     const used = new Set([...this.players.values()].map((p) => p.pawn));
     const p: Player = {
       id: randomUUID(),
-      secret: randomBytes(12).toString('hex'),
+      secret: randomHex(12),
       name: clean,
       pawn: PAWNS.find((x) => !used.has(x)) ?? null,
       tokens: this.def.startTokens,

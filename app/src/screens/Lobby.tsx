@@ -5,21 +5,14 @@ import { emit } from '../socket';
 import { Logo, PAWN_NAME, PawnIcon, SectionTitle, useGame, useMe } from '../ui';
 
 /** URL other phones open. On localhost we swap in the computer's Wi-Fi IP so phones can reach it. */
+declare const __LAN_IP__: string;
+
+/** URL other phones open. In local dev (localhost) we swap in the computer's Wi-Fi IP so phones can reach it. */
 export function useJoinUrl(code: string) {
-  const base = `${window.location.origin}${window.location.pathname}`;
-  const [url, setUrl] = useState(`${base}?join=${code}`);
-  useEffect(() => {
-    const { hostname, protocol, port } = window.location;
-    if (!['localhost', '127.0.0.1', '::1'].includes(hostname)) return;
-    fetch('/api/info')
-      .then((r) => r.json())
-      .then((info: { lanIps: string[] }) => {
-        const ip = info.lanIps.find((i) => i.startsWith('192.168.')) ?? info.lanIps[0];
-        if (ip) setUrl(`${protocol}//${ip}${port ? `:${port}` : ''}${window.location.pathname}?join=${code}`);
-      })
-      .catch(() => {});
-  }, [code]);
-  return url;
+  const { hostname, protocol, port, pathname, origin } = window.location;
+  const local = ['localhost', '127.0.0.1', '::1'].includes(hostname) && __LAN_IP__;
+  const host = local ? `${protocol}//${__LAN_IP__}${port ? `:${port}` : ''}` : origin;
+  return `${host}${pathname}?join=${code}`;
 }
 
 export function JoinQr({ code }: { code: string }) {
@@ -124,6 +117,7 @@ export default function Lobby() {
               <li>Every detective takes <b className="red">3 ;</b> Query Tokens.</li>
             </ol>
           </div>
+          <p className="small muted center">Your phone runs the game: keep this app open until the end.</p>
           {game.players.length < 2 && <p className="small amber center">2–4 detectives recommended. You can still start alone to test.</p>}
           <button
             className="btn primary big block"

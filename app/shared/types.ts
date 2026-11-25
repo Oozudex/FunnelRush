@@ -133,6 +133,7 @@ export interface Session {
   code: string;
   playerId: string;
   secret: string;
+  host?: boolean;   // this phone runs the game
 }
 
 export interface ScanResult {
