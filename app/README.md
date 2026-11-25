@@ -44,7 +44,7 @@ Commit puis push le dossier `docs/` à la racine du dépôt. GitHub Pages est r�
 |---|---|
 | **Home** | Créer une partie (code type `RAVEN-42`) ou en rejoindre une (QR qui pré-remplit le code, ou saisie manuelle). |
 | **Waiting room** | Code + QR, liste des détectives en temps réel, choix du pion P1–P4, l'hôte choisit qui commence (le plus jeune) et lance la partie. |
-| **Play** | **Ton tour, guidé pas à pas :** ① déplacer son pion ② faire UNE action (fouiller la pièce = scanner une carte, recharger en Server Room, accuser à la Library) ③ interroger W.A.T.S.O.N. (facultatif) ④ fin du tour. **Pas ton tour :** « X is playing », et rien n'est jouable. Le moteur bloque aussi toute action hors de son tour et toute deuxième action dans le même tour. |
+| **Play** | **Ton tour, guidé pas à pas :** ① déplacer son pion ② faire UNE action (fouiller la pièce = scanner jusqu'à 2 cartes, recharger en Server Room, accuser à la Library) ③ interroger W.A.T.S.O.N. (facultatif) ④ fin du tour. **Pas ton tour :** « X is playing », et rien n'est jouable. Le moteur bloque aussi toute action hors de son tour et toute deuxième action dans le même tour (réglage : `SCANS_PER_TURN` dans `src/engine/game.ts`). |
 | **Police Console** | On coche 1 ou 2 de ses indices, puis on lance la recherche (1 `;`). La phrase en anglais et le vrai SQL sont affichés, le résultat est privé, et « 0 SUSPECTS FOUND » s'affiche avec un effet glitch. Une condition libre est possible (repliée), mais seulement sur les colonnes débloquées 🔒. |
 | **Clues** | Indices regroupés par trait avec « seen ×N » (règle d'or), mises à jour W.A.T.S.O.N. confirmées, culs-de-sac, bonus. |
 | **Suspects** | Carnet privé : 12 suspects à cocher ✗, interrogatoire (déclaration de chaque suspect), notes. |

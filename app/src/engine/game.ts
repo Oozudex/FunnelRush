@@ -13,6 +13,8 @@ import { publicCase, type CaseDef } from './cases/types';
 
 const WORDS = ['RAVEN', 'STORM', 'ALIBI', 'MANOR', 'GHOST', 'CIGAR', 'TEACUP', 'MOTIVE', 'SHADOW', 'THUNDER', 'CANDLE', 'BUTLER', 'POISON', 'ATTIC', 'CLOCK'];
 export const MAX_PLAYERS = 4;
+/** How many cards a detective may scan with the Search action, per turn. */
+export const SCANS_PER_TURN = 2;
 
 interface Player {
   id: string;
@@ -44,6 +46,8 @@ export class Game {
   lastAccusation: GameState['lastAccusation'] = null;
   /** The ONE action of the current turn (rules V2): search, recharge or accuse. */
   action: GameState['action'] = null;
+  /** Cards scanned this turn. */
+  scans = 0;
   touched = Date.now();
   logId = 0;
 
@@ -129,6 +133,7 @@ export class Game {
     for (const p of this.players.values()) p.tokens = this.def.startTokens;
     this.phase = 'playing';
     this.action = null;
+    this.scans = 0;
     this.addLog('info', `The investigation begins. ${this.current().name} plays first.`);
   }
 
@@ -145,6 +150,7 @@ export class Game {
 
   private advance() {
     this.action = null;
+    this.scans = 0;
     this.turn += 1;
     if (this.turn >= this.order.length) this.finishRound();
     else this.addLog('turn', `${this.current().name}'s turn.`);
@@ -159,6 +165,7 @@ export class Game {
   private finishRound() {
     const done = this.round;
     this.action = null;
+    this.scans = 0;
     this.turn = 0;
     this.round += 1;
     if (done % this.def.updateEvery === 0) {
@@ -193,7 +200,12 @@ export class Game {
     const card = this.def.cards[code];
     if (!card) throw new GameError(`Unknown code "${raw.trim().slice(0, 20)}". Check the code printed under the QR.`);
     const existing = p.evidence.find((e) => e.code === code);
-    if (!existing) this.takeAction('search');
+    if (!existing) {
+      if (this.action === 'search') {
+        if (this.scans >= SCANS_PER_TURN) throw new GameError(`You already scanned ${SCANS_PER_TURN} cards this turn. Tap "End my turn".`);
+      } else this.takeAction('search');
+      this.scans += 1;
+    }
     if (card.type === 'bonus') {
       let effect: string | undefined;
       if (card.bonus === 'token') {
@@ -326,6 +338,8 @@ export class Game {
       winnerId: this.winnerId,
       lastAccusation: this.lastAccusation,
       action: this.action,
+      scans: this.scans,
+      scansPerTurn: SCANS_PER_TURN,
       solution:
         this.phase === 'over'
           ? {
@@ -361,7 +375,7 @@ export class Game {
       players: [...this.players.values()].map(({ sockets, ...p }) => p),
       order: this.order, firstPlayerId: this.firstPlayerId, turn: this.turn, round: this.round,
       updates: this.updates, log: this.log, winnerId: this.winnerId, usedBonus: [...this.usedBonus],
-      lastAccusation: this.lastAccusation, action: this.action, touched: this.touched, logId: this.logId,
+      lastAccusation: this.lastAccusation, action: this.action, scans: this.scans, touched: this.touched, logId: this.logId,
     };
   }
 
@@ -370,7 +384,7 @@ export class Game {
     Object.assign(g, {
       phase: d.phase, hostId: d.hostId, order: d.order, firstPlayerId: d.firstPlayerId, turn: d.turn, round: d.round,
       updates: d.updates, log: d.log, winnerId: d.winnerId, usedBonus: new Set(d.usedBonus),
-      lastAccusation: d.lastAccusation, action: d.action ?? null, touched: d.touched, logId: d.logId,
+      lastAccusation: d.lastAccusation, action: d.action ?? null, scans: d.scans ?? 0, touched: d.touched, logId: d.logId,
     });
     for (const p of d.players) g.players.set(p.id, { ...p, sockets: new Set() });
     return g;

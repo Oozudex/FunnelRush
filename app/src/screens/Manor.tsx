@@ -52,7 +52,7 @@ export default function Manor() {
       <div className="panel flat small">
         <ol className="rules" style={{ margin: 0, paddingLeft: 18 }}>
           <li><b>Move</b> up to 2 rooms.</li>
-          <li><b>One action</b>: search the room (scan a card), recharge (Server Room) or accuse (Library).</li>
+          <li><b>One action</b>: search the room (scan up to {game.scansPerTurn} cards), recharge (Server Room) or accuse (Library).</li>
           <li><b>Query</b> W.A.T.S.O.N. with your clues: 1 token each.</li>
           <li>A clue found twice is probably true. 0 suspects found? One clue is fake!</li>
         </ol>

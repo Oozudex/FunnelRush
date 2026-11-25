@@ -12,7 +12,7 @@ export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: '
   const { game } = view;
   const { me, myTurn, current } = useMe(view);
   const [panel, setPanel] = useState<Panel>(null);
-  const [scan, setScan] = useState<ScanResult | null>(null);
+  const [scans, setScans] = useState<ScanResult[]>([]);
   const [consoleOpen, setConsoleOpen] = useState(false);
   const [busy, setBusy] = useState(false);
 
@@ -20,7 +20,7 @@ export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: '
   const turnKey = `${game.round}:${game.turn}`;
   useEffect(() => {
     setPanel(null);
-    setScan(null);
+    setScans([]);
     setConsoleOpen(false);
   }, [turnKey]);
 
@@ -46,7 +46,11 @@ export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: '
 
   // ------------------------------------------------------------ my turn
   const done = game.action;
-  const doneText = done === 'search' ? 'You searched the room.' : done === 'recharge' ? 'You recharged your tokens.' : done === 'accuse' ? 'You accused.' : '';
+  const max = game.scansPerTurn;
+  const canScanMore = done === 'search' && game.scans < max;
+  const doneText = done === 'search'
+    ? game.scans >= max ? `You scanned ${max} cards.` : `Card ${game.scans} of ${max} scanned. You can scan one more card.`
+    : done === 'recharge' ? 'You recharged your tokens.' : done === 'accuse' ? 'You accused.' : '';
 
   const endTurn = async () => {
     setBusy(true);
@@ -65,14 +69,21 @@ export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: '
       </div>
 
       {/* ② ACT */}
-      <div className={`step ${done ? 'ok' : 'now'}`}>
-        <div className="step-title"><span className="num">2</span> Do ONE action {done && <span className="tag" style={{ marginLeft: 'auto', color: '#3ac06b' }}>✓ done</span>}</div>
+      <div className={`step ${done && !canScanMore ? 'ok' : 'now'}`}>
+        <div className="step-title"><span className="num">2</span> Do ONE action {done && !canScanMore && <span className="tag" style={{ marginLeft: 'auto', color: '#3ac06b' }}>✓ done</span>}</div>
         {done ? (
-          <p className="small" style={{ margin: 0 }}>{doneText}</p>
+          <>
+            <p className="small" style={{ margin: 0 }}>{doneText}</p>
+            {canScanMore && panel !== 'search' && (
+              <button className="btn primary block action" style={{ marginTop: 10 }} onClick={() => setPanel('search')}>
+                <span>🔎 Scan a 2nd card</span><small>Draw the next card of the same room</small>
+              </button>
+            )}
+          </>
         ) : panel === null ? (
           <div className="stack" style={{ gap: 10 }}>
             <button className="btn primary big block action" onClick={() => setPanel('search')}>
-              <span>🔎 Search the room</span><small>Draw a card and scan it</small>
+              <span>🔎 Search the room</span><small>Draw up to {max} cards and scan them</small>
             </button>
             <button className="btn big block action" onClick={() => setPanel('recharge')}>
               <span>⚡ Recharge</span><small>Only in the Server Room</small>
@@ -85,9 +96,9 @@ export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: '
           <button className="btn ghost small" onClick={() => setPanel(null)}>← Choose another action</button>
         )}
 
-        {!done && panel === 'search' && (
+        {(!done || canScanMore) && panel === 'search' && (
           <div style={{ marginTop: 12 }}>
-            <ScanPanel onResult={(r) => { setScan(r); setPanel(null); }} />
+            <ScanPanel onResult={(r) => { setScans((l) => [r, ...l.filter((x) => x.item.code !== r.item.code)]); setPanel(null); }} />
           </div>
         )}
         {!done && panel === 'recharge' && (
@@ -109,10 +120,12 @@ export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: '
         {!done && panel === 'accuse' && <Accuse onDone={() => setPanel(null)} />}
       </div>
 
-      {scan && (
+      {scans.length > 0 && (
         <div className="stack">
-          <EvidenceCard item={scan.item} note={scan.effect ?? (scan.again ? 'You had already scanned this card.' : undefined)} />
-          {scan.item.kind !== 'bonus' && <p className="small muted center" style={{ margin: 0 }}>Keep the card face down in front of you.</p>}
+          {scans.map((sc) => (
+            <EvidenceCard key={sc.item.code} item={sc.item} note={sc.effect ?? (sc.again ? 'You had already scanned this card.' : undefined)} />
+          ))}
+          <p className="small muted center" style={{ margin: 0 }}>Keep your cards face down in front of you.</p>
         </div>
       )}
 
