@@ -72,11 +72,10 @@ export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: '
   const done = game.action;
   const max = game.scansPerTurn;
   const canScanMore = done === 'search' && game.scans < max;
-  const actionDone = !!done && !canScanMore;
-  const doneText =
-    done === 'search'
-      ? game.scans >= max ? `You scanned ${max} cards.` : `Card ${game.scans} of ${max} scanned. You can scan one more.`
-      : done === 'recharge' ? 'Tokens recharged.' : done === 'accuse' ? 'You accused.' : '';
+  const searched = done === 'search' && !canScanMore;
+  const other = done === 'recharge' || done === 'accuse';
+  const otherText = done === 'recharge' ? 'Tokens recharged.' : done === 'accuse' ? 'You accused.' : '';
+  const cards = max === 1 ? '1 card' : `up to ${max} cards`;
 
   const endTurn = async () => {
     setBusy(true);
@@ -84,21 +83,8 @@ export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: '
     setBusy(false);
   };
 
-  return (
-    <div className="stack" style={{ gap: 22 }}>
-      <div className="title t2">Your turn, {me.name}</div>
-
-      <Step n="1" title="Move your pawn" sub="Up to 2 rooms on the board, or stay." state="info" />
-
-      <Step n="2" title="Do one action" sub={done ? doneText : 'Pick where your pawn is.'} state={actionDone ? 'done' : undefined}>
-        {!done && panel === null && (
-          <div className="rooms">
-            <RoomTile room="Any room with a deck" icon={Icon.scan} title="Search the room" sub={`Draw up to ${max} cards and scan them`} main onClick={() => setPanel('search')} />
-            <RoomTile room="Server Room" icon={RoomIcon['Server Room']} title="Recharge" sub={`Back to ${game.caseInfo.maxTokens} tokens`} onClick={() => setPanel('recharge')} />
-            <RoomTile room="Library" icon={RoomIcon.Library} title="Accuse the killer" sub="Name the killer and win" onClick={() => setPanel('accuse')} />
-          </div>
-        )}
-
+  const panelBox = (
+    <>
         {canScanMore && panel !== 'search' && (
           <button className="btn primary block" onClick={() => setPanel('search')}>{Icon.scan} Scan the next card</button>
         )}
@@ -136,21 +122,61 @@ export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: '
               </>
             )}
             {panel === 'accuse' && <Accuse onDone={() => setPanel(null)} />}
-            {!done && <button className="btn ghost block" onClick={() => setPanel(null)}>Choose another action</button>}
+            {!done && <button className="btn ghost block" onClick={() => setPanel(null)}>Back</button>}
           </div>
         )}
 
+    </>
+  );
+
+  return (
+    <div className="stack" style={{ gap: 22 }}>
+      <div className="title t2">Your turn, {me.name}</div>
+
+      <Step
+        n="1"
+        title="Move and search"
+        sub={
+          searched
+            ? 'Card drawn. You can finish your move (up to 2 rooms in all).'
+            : other
+              ? 'No search this turn: you used your action.'
+              : <>Move up to 2 rooms. <b>Once</b> on the way (before, halfway or at the end), draw <b>{cards}</b> in the room you are in.</>
+        }
+        state={searched ? 'done' : other ? 'info' : undefined}
+      >
+        {!done && panel === null && (
+          <div className="rooms">
+            <RoomTile room="Any room with a deck" icon={Icon.scan} title="Search the room" sub={`Draw ${cards} and scan it`} main onClick={() => setPanel('search')} />
+          </div>
+        )}
+        {(panel === 'search' || canScanMore) && panelBox}
         {scans.map((sc) => (
           <EvidenceCard key={sc.item.code} item={sc.item} note={sc.effect ?? (sc.again ? 'You had already scanned this card.' : undefined)} />
         ))}
         {scans.length > 0 && <p className="small muted center">Keep your cards face down in front of you.</p>}
       </Step>
 
-      <Step n="3" title="Query W.A.T.S.O.N." sub="Optional. Write a SQL query with your clues. 1 query = 1 token.">
-        <button className="btn block" onClick={() => setConsoleOpen(true)} disabled={me.tokens < 1}>
-          {Icon.console} Open the Police Console
+      <Step n="2" title="Or, instead of searching" sub={other ? otherText : searched ? 'You searched this turn.' : 'Only in these two rooms.'} state={other ? 'done' : searched ? 'info' : undefined}>
+        {!done && panel === null && (
+          <div className="rooms">
+            <RoomTile room="Server Room" icon={RoomIcon['Server Room']} title="Recharge" sub={`Back to ${game.caseInfo.maxTokens} tokens`} onClick={() => setPanel('recharge')} />
+            <RoomTile room="Library" icon={RoomIcon.Library} title="Accuse the killer" sub="Name the killer and win" onClick={() => setPanel('accuse')} />
+          </div>
+        )}
+        {(panel === 'recharge' || panel === 'accuse') && panelBox}
+      </Step>
+
+      <Step
+        n="3"
+        title="Query W.A.T.S.O.N."
+        sub={game.queried ? 'Query done for this turn.' : 'Optional. Anytime on your turn: ONE query, for 1 token.'}
+        state={game.queried ? 'done' : undefined}
+      >
+        <button className="btn block" onClick={() => setConsoleOpen(true)} disabled={me.tokens < 1 && !game.queried}>
+          {Icon.console} {game.queried ? 'See my query' : 'Open the Police Console'}
         </button>
-        {me.tokens < 1 && <p className="small red">No token left: recharge in the Server Room.</p>}
+        {me.tokens < 1 && !game.queried && <p className="small red">No token left: recharge in the Server Room.</p>}
       </Step>
 
       <button className="btn primary big block" disabled={busy} onClick={endTurn}>

@@ -32,6 +32,7 @@ function dispatch(g: Game, me: string, event: string, args: any[]): unknown {
     case 'lobby:kick': return g.removePlayer(me, String(args[0]));
     case 'game:start': return g.start(me);
     case 'card:scan': return g.scan(me, String(args[0] ?? ''));
+    case 'bonus:play': return g.playBonus(me, String(args[0] ?? ''));
     case 'query:run': return g.query(me, args[0] as Condition[]);
     case 'turn:end': return g.endTurn(me);
     case 'round:end': return g.endRound(me);
@@ -108,7 +109,8 @@ export class HostRoom {
   private tick() {
     if (this.dead || !this.L) return;
     if (!this.L.connected()) return this.L.wake();
-    this.L.pub(`${base(this.game.code)}all`, { t: 'ping' }, { qos: 0 });
+    // the ping carries the revision of the game: a phone that missed an update asks for it again
+    this.L.pub(`${base(this.game.code)}all`, { t: 'ping', rev: this.game.touched }, { qos: 0 });
     if (this.refreshPresence()) this.push();
   }
 
@@ -217,7 +219,7 @@ export class HostRoom {
 
   private sendView(dev: string, pid: string) {
     if (!this.game.players.has(pid)) return;
-    this.L?.pub(`${base(this.game.code)}to/${dev}`, { t: 'view', view: this.game.view(pid) });
+    this.L?.pub(`${base(this.game.code)}to/${dev}`, { t: 'view', rev: this.game.touched, view: this.game.view(pid) });
   }
 
   wake() {
@@ -253,6 +255,9 @@ export class GuestRoom {
   private helloAt = 0;
   private fails = 0;
   private dead = false;
+  /** Revision of the last view received, and when we last asked for a newer one. */
+  private rev = 0;
+  private askedAt = 0;
 
   constructor(public code: string, public dev: string, private h: Handlers) {
     const b = base(code);
@@ -267,7 +272,14 @@ export class GuestRoom {
           this.h.status('online');
         }
         if (m.t === 'ack') this.waiting.get(m.id)?.(m.res);
-        else if (m.t === 'view') this.h.view(m.view);
+        else if (m.t === 'view') {
+          if (typeof m.rev === 'number') this.rev = m.rev;
+          this.h.view(m.view);
+        } else if (m.t === 'ping' && typeof m.rev === 'number' && m.rev !== this.rev && Date.now() - this.askedAt > 2500) {
+          // a view was lost on the way (relay drop, phone asleep): ask the host to send it again
+          this.askedAt = Date.now();
+          this.hello();
+        }
         else if (m.t === 'closed') {
           this.close();
           this.h.closed(m.reason || 'The game is over.');

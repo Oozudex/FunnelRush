@@ -58,20 +58,25 @@ Brand sheet: `the-last-query_brand-sheet_A4_bleed3mm.pdf` (print, crop marks) an
 
 Icons: 24 px grid, 2 px stroke, square ends (room icons + card-type icons), drawn in `tools/build_print.py`.
 
-## Step 3: game board (`DA/board/`) ✅ V2 validated on 2026-11-25
+## Step 3: game board (`DA/board/`) ✅ V3 validated on 2026-11-25
 
-- `the-last-query_board_A2_bleed3mm_cropmarks.pdf`: **A2 landscape 594 × 420 mm**, 3 mm bleed, crop marks. Vector PDF, fonts embedded.
-- `the-last-query_board_A2_300dpi.png`: same at 300 DPI (7325 × 5269 px, includes bleed and slug).
-- **v3: floor plan of Ravenscroft Manor**, seen from above, flat noir style with depth:
-  - **light**: moonlight falling through every outside window, amber lamp glows, vignetted rooms, a flat cast shadow under every wall and piece of furniture (light from the top-left);
-  - **architecture**: thick bone walls, doors opening onto the hallways with wooden thresholds, windows with mullions, four corner towers, the front door with its steps and gravel path, a hedge around the house, a decorative frame;
-  - **one floor per room**: star chart, parquet, stone, herringbone, marble, tiles, greenhouse glass, raised server floor, cellar brick;
-  - **furniture and story clues**: Victor's armchair, his cold tea, his dropped phone, the chalk outline and evidence marker 1 (Library); telescope (Observatory); pews, altar, organ, stained-glass light (Chapel); grand piano, cello, gramophone (Music Room); staircase, chandelier (Grand Hall); range, sink, coffee machine, table (Kitchen); foxglove beds labelled *Digitalis purpurea* (Greenhouse); server racks, a red failing unit, a terminal showing `SELECT *` / `ERR` (Server Room); barrels, bottle racks, tasting table (Wine Cellar); a grandfather clock stopped at 11:45 and **muddy footprints "SIZE 44?" from the Greenhouse to the Library** in the hallway.
-- Game info: name plates numbered N°01-09 with the room icon and power, a **88 × 63 mm deck zone** (corner brackets) on a rug or table in every searchable room, red trapdoors for the secret passages, P1-P4 start medallions in the Grand Hall.
-- Sidebar: logo, story line, **clock dial** (hands stopped at 11:45, 8 round slots from 12:00 to 4:00 AM + dawn), turn summary with icons, *Solve the case* (Opportunity + Means + Motive), coffee bank.
-- Source: `tools/build_board.py` (pure SVG in millimetres; gradients and shadows stay vector in the PDF).
+The V2 board (A2 with a side panel) was replaced by the **V3 board**: the manor only, no side panel,
+**394 × 539 mm (portrait) printed on 2 A3 landscape sheets** stacked top / bottom and glued together.
+The logo is a rug in the Grand Hall. Clean case-file style (aged paper, typewriter text, black and red accents).
+
+| File | Use |
+|---|---|
+| `the-last-query_board-V3_sheet-1-of-2_A3_print.pdf` | **print**: top half, A3 landscape at 100 % |
+| `the-last-query_board-V3_sheet-2-of-2_A3_print.pdf` | **print**: bottom half + 10 mm glue tab |
+| `the-last-query_board-V3_assembled_preview_394x539.pdf` / `_preview.png` | preview of the glued board |
+| `png/*_300dpi.png` | both sheets and the assembled board at 300 DPI |
+
+How to print, cut and glue, and the source scripts: see `DA_V3/README.md` (`DA_V3/tools/build_board_v3.py`).
 
 ## Step 4: cards (`DA/cards/`) ✅ V2 validated on 2026-11-25
+
+> **Current print files** = 40 clue cards V2, **63 × 88 mm**, made by `tools/build_cards.py` (34 Evidence + 6 Bonus, codes `LIB-01` … `CEL-06`). Updated after playtest 1: Bonus cards now carry a QR too (*"Keep it face up · play it on your turn"*). The **V3 cards, 50 × 85 mm**, with the same codes, are being made in `DA_V3/` and will replace them.
+> The description below (64 cards, Keyword, Table…) is the older V1 set, kept for reference.
 
 **Style: B "Case File"** (chosen on 2026-11-24 among 3 proposals in `cards/proposals/`): square corners, cream paper with a red margin line, paper clip, black header with the type colour on the left, a red rubber stamp per type (ACCESS GRANTED, RECORDS, EVIDENCE, BREAK TIME, URGENT, CLASSIFIED); backs = kraft folder with a "CASE FILE N° 1123" tab, a typed room label and a CONFIDENTIAL stamp. The other styles stay available in `tools/build_print.py` (`THEME = "noir" | "dossier" | "deco"`).
 
@@ -92,11 +97,12 @@ Regenerate board, cards and brand sheet: `python3 DA/tools/build_print.py && zsh
 ## Step 5: tokens, pawns & notebook (`DA/tokens/`) ✅ V2 validated on 2026-11-25
 
 - `the-last-query_query-tokens_pawns_A4.pdf` (1 page A4, print at 100 %): **20 Query Tokens** `;` (16 + 4 spare, Ø 20 mm, black disc with the logo's red block semicolon) and **4 pawns P1-P4** to fold into tents (amber, red, blue, bone). Glue on 1.5 mm card, cut on the dotted circles / grey lines.
-- `the-last-query_detective-notebook_A5_2-sides_bleed3mm.pdf`: one A5 sheet per player, two sides. Side 1: 12 suspects × age / height / shoe / hand / hair / glasses / smell + ✗, golden rules, W.A.T.S.O.N. updates (rounds 4/8/12). Side 2: *My clues* (object, room, what it reveals, seen ×3), accusation template, table talk, example query with its SQL.
+- `the-last-query_detective-notebook_A5_2-sides_bleed3mm.pdf`: one A5 sheet per player, two sides (updated after playtest 1: 1 query per turn, "two clues disagree" rule, example query in real SQL). Side 1: 12 suspects × age / height / shoe / hand / hair / glasses / smell + ✗, golden rules, W.A.T.S.O.N. updates (rounds 4/8/12). Side 2: *My clues* (object, room, what it reveals, seen ×3), accusation template, table talk, example query with its SQL.
 - Source: `tools/build_tokens.py`. V1 (coffee, clock, suspended tokens) is in `_archive_v1/`.
 
 ## Step 6: rules booklet (`DA/rules/`) V2
 
+- Updated after playtest 1 (2026-11-25): 1 card per turn during the move, 1 query per turn, Bonus cards kept and played later, what to do with drawn cards, "two clues disagree" golden rule, block-by-block Police Console.
 - **A5, 8 pages, in English** (saddle-stitch: 2 A4 sheets folded): cover, the story & the game in 30 seconds, components & setup, your turn (move, search / recharge / accuse, query), the clues & golden rules, the Police Console & W.A.T.S.O.N. updates, accuse & table talk, back cover.
 - `the-last-query_rules_A5_bleed3mm_cropmarks.pdf` (print shop) · `the-last-query_rules_A5_screen.pdf` (screen / printer booklet mode) · `the-last-query_rules_overview.png`.
 - The back cover still has a blank: **"A GAME BY TEAM ________"**. Source: `tools/build_rules.py`.
@@ -105,7 +111,7 @@ Regenerate board, cards and brand sheet: `python3 DA/tools/build_print.py && zsh
 - **Bleed**: 3 mm on every edge. The background goes all the way into it.
 - **Safe area**: no text or important element closer than **5 mm** to the trim line (3 mm minimum).
 - **Resolution**: vectors (SVG / PDF) whenever possible; raster images at **300 DPI** minimum at final size.
-- **Real sizes in mm**: cards 63 × 88 mm (poker size), board A2 (594 × 420 mm), rules booklet A5.
+- **Real sizes in mm**: cards 63 × 88 mm (V2, poker size; V3 = 50 × 85 mm), board V3 2 × A3 (394 × 539 mm assembled), rules booklet A5.
 - **Crop marks** on every print PDF, placed outside the bleed (10 mm slug).
 - **CMYK**: files are made in RGB (sRGB). Convert to CMYK (profile *FOGRA39 / Coated*) at the print shop or in Illustrator/Affinity before sending, and check the red: bright screen reds lose some punch on paper.
 - No fonts inside the logo: everything is shapes, so nothing needs outlining. Board, cards and brand sheet PDFs embed their fonts.

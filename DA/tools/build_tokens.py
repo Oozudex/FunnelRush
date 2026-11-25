@@ -197,8 +197,8 @@ def notebook():
       <table><tr><th style="text-align:left;padding-left:1.4mm">SUSPECT</th>{head}<th class="x">&#10007;</th></tr>{rows}</table>
       <h2>&gt; HOW TO USE IT</h2>
       <div class="help">After each query, tick <b>&#10003;</b> the suspects who match a trait, cross out <b>&#10007;</b> the ones who don&#8217;t.
-      The last suspect standing is your killer. 1 query = 1 {tok}.</div>
-      <div class="gold">&#8220;Find the same clue <b>twice</b>, and it&#8217;s probably true.&#8221; &#183; &#8220;<b style="color:{RED}">0 suspects found?</b> One of your clues is fake!&#8221;</div>
+      The last suspect standing is your killer. <b>1 query per turn</b> = 1 {tok}.</div>
+      <div class="gold">&#8220;Find the same clue <b>twice</b>, and it&#8217;s probably true.&#8221; &#183; &#8220;<b style="color:{RED}">0 suspects found?</b> One of your clues is fake!&#8221; &#183; &#8220;Two clues disagree? One is planted.&#8221;</div>
       <h2>&gt; W.A.T.S.O.N. UPDATES (TRUE TRAITS OF THE KILLER)</h2>
       <div style="display:flex;gap:2.5mm">{"".join(f"<div style='flex:1;border:.3mm solid {NOIR};padding:1.4mm 2mm;font:600 7.4pt Archivo;height:10mm;background:#F8F4EA'><span style='font-family:Silkscreen;font-size:5.6pt;color:{RED}'>ROUND {n}</span><br>+1 {tok}</div>" for n in (4, 8, 12))}</div>
       <div class="ft"><span>THE LAST QUERY</span><span>SIDE 1 / 2</span></div>"""
@@ -212,8 +212,8 @@ def notebook():
       <div class="say">&#8220;I found a muddy footprint in the Greenhouse.&#8221;</div>
       <div class="say">&#8220;Size 44 again! That&#8217;s the second time.&#8221;</div>
       <div class="say">&#8220;Zero suspects found&#8230; one of my clues must be fake.&#8221;</div>
-      <div class="code">FIND guests WHERE shoe size <b>is</b> 44 <b>AND</b> height <b>between</b> 1.85 and 1.90<br>
-      <span style="color:#8C877D">&#8594; SELECT name FROM guests WHERE shoe = 44 AND height BETWEEN 1.85 AND 1.90;</span></div>
+      <div class="code"><b>SELECT</b> name <b>FROM</b> guests <b>WHERE</b> shoe = 44 <b>AND</b> height <b>BETWEEN</b> 1.85 <b>AND</b> 1.90;<br>
+      <span style="color:#8C877D">&#8594; Find the guests whose shoe size is 44 and height is between 1.85 and 1.90 m.</span></div>
       <div class="ft"><span>THE LAST QUERY</span><span>SIDE 2 / 2</span></div>"""
     return bp.page("The Last Query - detective notebook A5", pw, ph, sheet(front) + sheet(back), css)
 

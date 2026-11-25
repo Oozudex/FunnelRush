@@ -95,6 +95,7 @@ export interface GameState {
   action: 'search' | 'recharge' | 'accuse' | null;  // the ONE action already done this turn
   scans: number;          // cards scanned this turn
   scansPerTurn: number;   // max cards per Search action
+  queried: boolean;       // the ONE query of this turn is done (playtest 1)
 }
 
 export interface EvidenceItem {
@@ -104,6 +105,8 @@ export interface EvidenceItem {
   kind: 'trait' | 'deadend' | 'bonus';  // never says if a trait is true or planted
   text: string;
   condition?: Condition;
+  bonus?: 'token' | 'move' | 'peek';  // bonus cards: their effect
+  used?: boolean;                     // bonus cards: already played
   at: number;
 }
 

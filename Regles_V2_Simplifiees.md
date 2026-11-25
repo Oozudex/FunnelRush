@@ -59,14 +59,17 @@
 > 4. The **youngest** player starts.
 
 ### Your turn
-> **① MOVE**: move up to **2 rooms**. You may also stay.
+> **① MOVE & SEARCH**: move up to **2 rooms**. You may also stay.
+> - **Search**: **once** during your move (before it, halfway or at the end), draw the **top card** of the room you are in. Read it secretly and keep it face down in front of you. **Only 1 card per turn.**
 >
-> **② ACT**: do ONE thing in your room:
-> - **Search**: draw **up to 2 cards** from the top of the room deck, one at a time. Read them secretly and keep them face down in front of you.
+> **② OR, INSTEAD OF SEARCHING**:
 > - **Recharge** *(Server Room only)*: refill up to **3 tokens**.
 > - **Accuse** *(Library only)*: see below.
 >
-> **Anytime on your turn: QUERY.** Pay **1 token** to search the guest database on your phone.
+> **Anytime on your turn: QUERY (once).** Pay **1 token** to search the guest database on your phone. Only **1 query per turn**.
+> **Anytime on your turn: BONUS.** Play a Bonus card you kept. It is not your action.
+>
+> **Your cards**: keep them **face down** in front of you and never put them back. Bonus cards stay **face up** until you play them.
 
 ### Accuse
 > Go to the **Library** and say out loud, in English:
@@ -86,9 +89,9 @@
 | 🔎 **Clue** (vrai indice) | 15 | *"Muddy footprint in the Greenhouse: **size 44**."* | Donne une vraie caractéristique du tueur. |
 | 📄 **Dead End** (indice inutile) | 13 | *"Dinner menu: salmon, potatoes, chocolate cake."* · *"Bram drank 6 glasses of whisky."* | Vrai, mais n'aide pas à trouver le tueur. |
 | 🎭 **Planted** (fausse piste) | 6 | *"A **red** lipstick mark on Victor's cup."* (désigne Sofia, innocente) | Le tueur a posé de faux indices pour piéger les détectives. |
-| ⚡ **Bonus** | 6 | *"Spare battery: +1 token"* ×3 · *"Running shoes: move again"* ×2 · *"Master key: look at the top card of any deck"* ×1 | Petits coups de pouce. |
+| ⚡ **Bonus** | 6 | *"Spare battery: +1 token"* ×3 · *"Running shoes: move again"* ×2 · *"Master key: look at the top card of any deck"* ×1 | Petits coups de pouce. **On les garde face visible et on les joue plus tard**, pendant son tour (playtest 1). |
 
-**Total : 40 cartes = 8 pièces × 5 cartes** (toutes les pièces sauf le Grand Hall).
+**Total : 40 cartes en 7 pioches de 5 ou 6 cartes.** Le Grand Hall et la Salle des serveurs n'ont pas de pioche (version finale, voir le game design).
 
 ### Comment on reconnaît une fausse piste ? (le cœur de l'équilibre)
 
@@ -97,24 +100,25 @@
 2. **Une fausse piste n'existe qu'en 1 exemplaire** et **contredit** un vrai indice.
 3. Quand on combine une fausse piste avec un vrai indice, l'app répond **« 0 suspect found »**.
    → C'est le moment « Aha ! » : *« Un de mes indices est faux ! »*. Les joueurs apprennent tout seuls ce que fait un `AND`.
+4. Deux indices qui se contredisent (cheveux blonds et cheveux roux) : l'un des deux est forcément faux. L'onglet *Clues* de l'app le signale, sans dire lequel (playtest 1).
 
 **Conséquence** : les fausses pistes font **gaspiller des jetons**, ce qui oblige à retourner à la Salle des serveurs. La boucle « fouiller → requête → recharger » s'équilibre toute seule.
 
-### Répartition par pièce (5 cartes chacune)
+### Répartition par pièce (version finale, identique au game design §6)
 
-| Pièce | Vrais | Inutiles | Faux | Bonus |
-|---|---|---|---|---|
-| Library (scène de crime) | 3 | 1 | 1 | 0 |
-| Greenhouse | 2 | 2 | 1 | 0 |
-| Observatory | 2 | 1 | 1 | 1 |
-| Chapel | 2 | 2 | 0 | 1 |
-| Music Room | 2 | 2 | 1 | 0 |
-| Kitchen | 2 | 2 | 1 | 0 |
-| Wine Cellar | 1 | 2 | 1 | 1 |
-| Server Room | 1 | 1 | 0 | 3 |
-| **Total** | **15** | **13** | **6** | **6** |
+| Pièce | Vrais | Inutiles | Faux | Bonus | Total |
+|---|---|---|---|---|---|
+| Library (scène de crime) | 3 | 1 | 1 | 0 | 5 |
+| Greenhouse | 2 | 2 | 1 | 1 | 6 |
+| Observatory | 2 | 2 | 1 | 1 | 6 |
+| Chapel | 2 | 2 | 0 | 1 | 5 |
+| Music Room | 2 | 2 | 1 | 1 | 6 |
+| Kitchen | 2 | 2 | 1 | 1 | 6 |
+| Wine Cellar | 2 | 2 | 1 | 1 | 6 |
+| Server Room | — | — | — | — | 0 |
+| **Total** | **15** | **13** | **6** | **6** | **40** |
 
-La **Bibliothèque** est riche en indices mais loin de la recharge. La **Salle des serveurs** recharge et donne des bonus, mais peu d'indices. C'est ce tiraillement qui crée la tension.
+La **Bibliothèque** est riche en indices mais loin de la recharge. La **Salle des serveurs** recharge mais n'a aucune carte : y aller coûte une fouille. C'est ce tiraillement qui crée la tension.
 
 ---
 
@@ -160,7 +164,7 @@ Le résultat donne la liste des noms qui correspondent (ou « 0 suspect found »
  💡 Real SQL:  SELECT name FROM guests WHERE shoe = 44 AND hand = 'left';
 ```
 
-- **1 jeton = 1 requête, avec 2 conditions maximum** (`WHERE` + `AND`). Pas besoin de comprendre le SQL pour jouer, mais on le voit à chaque requête.
+- **1 requête par tour, 1 jeton, 2 conditions maximum** (`WHERE` + `AND`). Toutes les colonnes sont ouvertes dès le départ (playtest 1). Pas besoin de comprendre le SQL pour jouer, mais on le voit à chaque requête.
 - Le téléphone **ne montre jamais toute la table** : on ne voit que les noms qui correspondent. Sans requête, on ne sait rien des suspects.
 - Bonus « école » : en fin de partie, l'app affiche **« You wrote 7 SQL queries tonight! »** avec la liste. C'est un super argument devant le jury.
 
@@ -200,7 +204,7 @@ Proposition : la **Salle des serveurs** passe dans le **coin en bas à droite** 
 2. **Filature** : si tu finis ton déplacement dans la même pièce qu'un autre détective, tu peux payer **1 jeton** pour regarder **1 de ses cartes** au hasard. Ça crée de l'interaction, tout en restant optionnel.
 3. **Carnet du détective** : une grille avec les 12 suspects en lignes et les caractéristiques en colonnes. On coche au fur et à mesure des résultats de requêtes : un mini « Qui est-ce ? » de détective.
 4. **Phrases utiles en anglais** au dos du carnet : *"I found a clue in the…"*, *"I think this clue is fake because…"*, *"The killer is…"*.
-5. **Plusieurs affaires** : l'app choisit le tueur au hasard parmi 3 affaires préparées, avec des pioches différentes (code couleur au dos). ❓Q2
+5. ~~**Plusieurs affaires**~~ : **abandonné après le playtest 1**. On garde une seule affaire (*The Foxglove Tea*).
 
 ---
 

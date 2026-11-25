@@ -13,8 +13,8 @@ import { publicCase, type CaseDef } from './cases/types';
 
 const WORDS = ['RAVEN', 'STORM', 'ALIBI', 'MANOR', 'GHOST', 'CIGAR', 'TEACUP', 'MOTIVE', 'SHADOW', 'THUNDER', 'CANDLE', 'BUTLER', 'POISON', 'ATTIC', 'CLOCK'];
 export const MAX_PLAYERS = 4;
-/** How many cards a detective may scan with the Search action, per turn. */
-export const SCANS_PER_TURN = 2;
+/** How many cards a detective may draw and scan per turn (playtest 1: only one, during the move). */
+export const SCANS_PER_TURN = 1;
 
 interface Player {
   id: string;
@@ -48,6 +48,8 @@ export class Game {
   action: GameState['action'] = null;
   /** Cards scanned this turn. */
   scans = 0;
+  /** Rules after playtest 1: one query per turn. */
+  queried = false;
   touched = Date.now();
   logId = 0;
 
@@ -134,6 +136,7 @@ export class Game {
     this.phase = 'playing';
     this.action = null;
     this.scans = 0;
+    this.queried = false;
     this.addLog('info', `The investigation begins. ${this.current().name} plays first.`);
   }
 
@@ -151,6 +154,7 @@ export class Game {
   private advance() {
     this.action = null;
     this.scans = 0;
+    this.queried = false;
     this.turn += 1;
     if (this.turn >= this.order.length) this.finishRound();
     else this.addLog('turn', `${this.current().name}'s turn.`);
@@ -166,6 +170,7 @@ export class Game {
     const done = this.round;
     this.action = null;
     this.scans = 0;
+    this.queried = false;
     this.turn = 0;
     this.round += 1;
     if (done % this.def.updateEvery === 0) {
@@ -202,25 +207,15 @@ export class Game {
     const existing = p.evidence.find((e) => e.code === code);
     if (!existing) {
       if (this.action === 'search') {
-        if (this.scans >= SCANS_PER_TURN) throw new GameError(`You already scanned ${SCANS_PER_TURN} cards this turn. Tap "End my turn".`);
+        if (this.scans >= SCANS_PER_TURN) throw new GameError(SCANS_PER_TURN === 1 ? 'Only 1 card per turn: you already drew yours. Tap "End my turn".' : `You already scanned ${SCANS_PER_TURN} cards this turn. Tap "End my turn".`);
       } else this.takeAction('search');
       this.scans += 1;
     }
     if (card.type === 'bonus') {
-      let effect: string | undefined;
-      if (card.bonus === 'token') {
-        if (this.usedBonus.has(code)) effect = 'This battery has already been used.';
-        else if (p.tokens >= this.def.maxTokens) effect = `You already have ${this.def.maxTokens} tokens. Keep this card for later!`;
-        else {
-          this.usedBonus.add(code);
-          p.tokens += 1;
-          effect = '+1 Query Token added. Discard the card.';
-          this.addLog('recharge', `${p.name} used a Spare Battery.`);
-        }
-      }
-      const item = existing ?? { code, room: card.room, object: card.object, kind: 'bonus' as const, text: card.reveal, at: Date.now() };
+      // playtest 1: a bonus card is kept and played later, on any of your turns
+      const item = existing ?? { code, room: card.room, object: card.object, kind: 'bonus' as const, bonus: card.bonus, text: card.reveal, used: false, at: Date.now() };
       if (!existing) p.evidence.push(item);
-      return { item, again: !!existing, effect };
+      return { item, again: !!existing, effect: item.used ? 'You already played this card.' : 'Keep this card face up. Play it on your turn: tab Clues.' };
     }
     if (existing) return { item: existing, again: true };
     const item: EvidenceItem = {
@@ -236,6 +231,28 @@ export class Game {
     return { item, again: false };
   }
 
+  /** Plays a kept bonus card. It is not the action of the turn. */
+  playBonus(playerId: string, raw: string): string {
+    const p = this.player(playerId);
+    this.myTurn(p, 'play a bonus card');
+    const code = normalizeCode(raw);
+    const item = p.evidence.find((e) => e.code === code && e.kind === 'bonus');
+    if (!item) throw new GameError('You do not have this bonus card.');
+    if (item.used) throw new GameError('You already played this card.');
+    const fx = item.bonus ?? this.def.cards[code]?.bonus;
+    let msg: string;
+    if (fx === 'token') {
+      if (p.tokens >= this.def.maxTokens) throw new GameError(`You already have ${this.def.maxTokens} tokens. Keep this card for later!`);
+      p.tokens += 1;
+      msg = '+1 Query Token. Discard the card.';
+    } else if (fx === 'move') msg = 'Move up to 2 more rooms now. Discard the card.';
+    else msg = 'Look at the top card of any room deck, put it back face down, then discard this card.';
+    item.used = true;
+    this.usedBonus.add(code);
+    this.addLog('recharge', `${p.name} played a bonus card: ${item.object}.`);
+    return msg;
+  }
+
   unlockedAttrs(p: Player): Set<string> {
     const s = new Set<string>();
     p.evidence.forEach((e) => e.condition && s.add(e.condition.attr));
@@ -247,14 +264,14 @@ export class Game {
     this.requirePlaying();
     const p = this.player(playerId);
     this.myTurn(p, 'run a query');
+    if (this.queried) throw new GameError('Only 1 query per turn: you already ran yours. Tap "End my turn".');
     if (p.tokens < 1) throw new GameError('No Query Token left. Recharge in the Server Room.');
     if (!Array.isArray(conds) || conds.length < 1 || conds.length > 2) throw new GameError('Use 1 or 2 conditions.');
-    const unlocked = this.unlockedAttrs(p);
+    // playtest 1: every column is open from the start, clues are only a reminder
     const attrs = this.def.attributes;
     for (const c of conds) {
       const a = attrs.find((x) => x.key === c?.attr);
       if (!a) throw new GameError('Unknown column.');
-      if (!unlocked.has(a.key)) throw new GameError(`"${a.label}" is locked. Find evidence about it first.`);
       const okOps = a.type === 'number' ? ['=', 'between', '>', '<'] : ['=', '!='];
       if (!okOps.includes(c.op)) throw new GameError('Invalid operator.');
       if (!a.options.map(String).includes(String(c.value))) throw new GameError(`Invalid value for ${a.label}.`);
@@ -264,6 +281,7 @@ export class Game {
       conds.every((c) => matches(s.traits, attrs.find((a) => a.key === c.attr)!, c)),
     );
     p.tokens -= 1;
+    this.queried = true;
     const rec: QueryRecord = {
       conditions: conds.map((c) => ({ attr: c.attr, op: c.op, value: c.value, ...(c.op === 'between' ? { value2: c.value2 } : {}) })),
       sql: buildSql(this.def.table, attrs, conds),
@@ -340,6 +358,7 @@ export class Game {
       action: this.action,
       scans: this.scans,
       scansPerTurn: SCANS_PER_TURN,
+      queried: this.queried,
       solution:
         this.phase === 'over'
           ? {
@@ -375,7 +394,7 @@ export class Game {
       players: [...this.players.values()].map(({ sockets, ...p }) => p),
       order: this.order, firstPlayerId: this.firstPlayerId, turn: this.turn, round: this.round,
       updates: this.updates, log: this.log, winnerId: this.winnerId, usedBonus: [...this.usedBonus],
-      lastAccusation: this.lastAccusation, action: this.action, scans: this.scans, touched: this.touched, logId: this.logId,
+      lastAccusation: this.lastAccusation, action: this.action, scans: this.scans, queried: this.queried, touched: this.touched, logId: this.logId,
     };
   }
 
@@ -384,7 +403,7 @@ export class Game {
     Object.assign(g, {
       phase: d.phase, hostId: d.hostId, order: d.order, firstPlayerId: d.firstPlayerId, turn: d.turn, round: d.round,
       updates: d.updates, log: d.log, winnerId: d.winnerId, usedBonus: new Set(d.usedBonus),
-      lastAccusation: d.lastAccusation, action: d.action ?? null, scans: d.scans ?? 0, touched: d.touched, logId: d.logId,
+      lastAccusation: d.lastAccusation, action: d.action ?? null, scans: d.scans ?? 0, queried: !!d.queried, touched: d.touched, logId: d.logId,
     });
     for (const p of d.players) g.players.set(p.id, { ...p, sockets: new Set() });
     return g;

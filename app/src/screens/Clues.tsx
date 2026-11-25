@@ -1,10 +1,14 @@
+import { useState } from 'react';
 import type { Condition, EvidenceItem } from '../../shared/types';
 import { describe } from '../../shared/sql';
-import { Bar, Icon, Label, useGame } from '../ui';
+import { emit } from '../socket';
+import { Bar, Icon, Label, useGame, useMe } from '../ui';
 import { EvidenceCard } from './Scan';
 
 export default function Clues() {
-  const { view } = useGame();
+  const { view, toast } = useGame();
+  const { myTurn } = useMe(view);
+  const [busy, setBusy] = useState('');
   const { caseInfo, updates } = view.game;
   const ev = view.me.evidence;
   const groups = new Map<string, { c: Condition; items: EvidenceItem[] }>();
@@ -19,6 +23,23 @@ export default function Clues() {
   const deadends = ev.filter((e) => e.kind === 'deadend');
   const bonus = ev.filter((e) => e.kind === 'bonus');
 
+  // two clues that disagree on the same trait: one of them is planted (the app never says which)
+  const byAttr = new Map<string, Set<string>>();
+  for (const g of sorted) byAttr.set(g.c.attr, (byAttr.get(g.c.attr) ?? new Set()).add(JSON.stringify(g.c)));
+  for (const u of updates) if (u.condition) byAttr.set(u.condition.attr, (byAttr.get(u.condition.attr) ?? new Set()).add(JSON.stringify(u.condition)));
+  const conflicts = [...byAttr.entries()].filter(([, s]) => s.size > 1).map(([k]) => caseInfo.attributes.find((a) => a.key === k)?.label ?? k);
+
+  const play = async (code: string) => {
+    setBusy(code);
+    try {
+      toast(await emit<string>('bonus:play', code));
+    } catch (e) {
+      toast((e as Error).message);
+    } finally {
+      setBusy('');
+    }
+  };
+
   return (
     <div className="stack">
       <div>
@@ -30,6 +51,13 @@ export default function Clues() {
         <p>“Find the same clue twice, and it's probably true.”</p>
         <p style={{ marginTop: 4 }}>“0 suspects found? One of your clues is fake!”</p>
       </div>
+
+      {conflicts.length > 0 && (
+        <div className="note" style={{ borderColor: 'var(--red)' }}>
+          <p className="small red"><b>These clues disagree: {conflicts.join(', ')}.</b></p>
+          <p className="small" style={{ marginTop: 4 }}>The killer can only have one. One of them is <b>planted</b>: trust the one you saw twice.</p>
+        </div>
+      )}
 
       {updates.length > 0 && (
         <div className="file flush">
@@ -91,14 +119,21 @@ export default function Clues() {
       {bonus.length > 0 && (
         <div className="file flush">
           <Bar icon={Icon.bolt} color="amber">Bonus cards</Bar>
+          <p className="small muted" style={{ padding: '10px 14px 0' }}>Keep them face up. Play one on your turn (it is not your action), then discard it.</p>
           <div className="list">
             {bonus.map((e) => (
               <div key={e.code} className="item">
                 <div className="grow">
-                  <div className="name">{e.object}</div>
+                  <div className="name" style={e.used ? { textDecoration: 'line-through', opacity: 0.6 } : undefined}>{e.object}</div>
                   <div className="small muted">{e.text}</div>
                 </div>
-                <span className="chip">{e.code}</span>
+                {e.used ? (
+                  <span className="chip">played</span>
+                ) : (
+                  <button className="btn primary small" disabled={!myTurn || busy === e.code} onClick={() => play(e.code)}>
+                    {myTurn ? 'Play it' : 'On your turn'}
+                  </button>
+                )}
               </div>
             ))}
           </div>

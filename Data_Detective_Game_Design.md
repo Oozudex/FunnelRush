@@ -35,7 +35,7 @@ The killer left traces all over the manor, and also **planted fake clues** to tr
 - Every room has a deck of **clue cards**.
 - Some clues describe **the killer** (shoe size, height, left-handed…). Some are **dead ends**. A few are **fake clues planted by the killer**.
 - On your phone, you **filter the list of suspects** with your clues. That's SQL, shown as simple sentences.
-- Each search on the phone costs **1 Query Token** `;`. Tokens are recharged in the **Server Room** (at the opposite end of the manor from the Library, with no cards to search), and everyone gets +1 token at each W.A.T.S.O.N. update.
+- Each search on the phone costs **1 Query Token** `;`, and you get **one search per turn**. Tokens are recharged in the **Server Room** (at the opposite end of the manor from the Library, with no cards to search), and everyone gets +1 token at each W.A.T.S.O.N. update.
 
 ---
 
@@ -92,14 +92,19 @@ The killer left traces all over the manor, and also **planted fake clues** to tr
 4. The **youngest** player starts. Play goes clockwise.
 
 ### Your turn
-**① MOVE**: move up to **2 rooms** along corridors. You may also stay.
+**① MOVE & SEARCH**: move up to **2 rooms** along corridors. You may also stay.
+- **Search**: **once** during your move (before it, halfway or at the end), draw the **top card** of the room you are in. Scan it (or read it) secretly and keep it face down in front of you. **Only 1 card per turn.** If the deck is empty, the room has been searched clean.
+- *Example: walk through the Music Room, draw its card, then go on to the Greenhouse. Or walk 2 rooms and draw in the second one.*
 
-**② ACT**: do ONE thing in your room:
-- **Search**: draw **up to 2 cards** from the top of the room deck, one at a time. Scan them (or read them) secretly and keep them face down in front of you. If the deck is empty, the room has been searched clean.
+**② OR, INSTEAD OF SEARCHING**:
 - **Recharge** *(Server Room only)*: refill up to **3 tokens** (you can never have more than 3).
 - **Accuse** *(Library only)*: see below.
 
-**Anytime during your turn: QUERY.** Pay **1 token** to run one search on your phone (up to **2 conditions**).
+**Anytime during your turn: QUERY (once).** Pay **1 token** to run **one** search on your phone (up to **2 conditions**). Only **1 query per turn**.
+
+**Anytime during your turn: BONUS.** Play a Bonus card you kept (see §6). It is not your action.
+
+**Your cards.** After scanning, keep every card **face down in front of you**. Never put a card back in a deck. The app remembers your cards too (tab *Clues*). Bonus cards stay **face up** until you play them, then go to the discard pile.
 
 ### W.A.T.S.O.N. update
 Every **4 rounds**, the host taps *End round* and the app:
@@ -120,6 +125,7 @@ Then type the name in the app.
 ### Golden rule (printed in the booklet)
 > ***"Find the same clue twice, and it's probably true."***
 > ***"0 suspects found? One of your clues is fake!"***
+> ***"Two clues disagree (blond hair and red hair)? One of them is planted. Trust the one you found twice."***
 
 ---
 
@@ -130,9 +136,9 @@ Each clue card shows **the object** (illustration + name + room), for example *"
 **Scanning it** shows what the object reveals **in the current case** (*"Size 44"*), or that it leads nowhere.
 
 - You still have to **walk to the room** to draw its cards: the board stays essential.
-- The same card can be a true clue in one case and a dead end in another, so the game is **replayable** and can't be learned by heart.
-- **Bonus cards** are printed in full and are never scanned.
-- For the demo, the app ships with **Case 1: The Foxglove Tea** (§8).
+- **One case for now** (decided after playtest 1). Because the cards only show objects, a second case could later reuse the same 40 cards with a new killer, but this is not promised to players.
+- **Bonus cards** print their effect in full. Scan one to keep it in the app, keep it **face up**, and play it on any of your turns (in the app), then discard it.
+- The app ships with **one case: The Foxglove Tea** (§8).
 
 ### 4 card types (Case 1)
 | Type | Qty | Example | Role |
@@ -140,7 +146,7 @@ Each clue card shows **the object** (illustration + name + room), for example *"
 | 🔎 **Clue** | 15 | *Muddy footprint → size 44* | A real trait of the killer. **5 traits × 3 versions** in 3 different rooms. |
 | 📄 **Dead End** | 13 | *Dinner menu → salmon, potatoes, chocolate cake* | True, but useless to find the killer. |
 | 🎭 **Planted** | 6 | *Lavender petals → the killer smells of lavender* | Fake clue left by the killer. Only **1 copy**, and it **contradicts** the real clues. |
-| ⚡ **Bonus** | 6 | *Spare Battery: +1 token* ×3 · *Running Shoes: move again* ×2 · *Master Key: look at the top card of any deck* ×1 | Small boosts. Printed, not scanned. |
+| ⚡ **Bonus** | 6 | *Spare Battery: +1 token* ×3 · *Running Shoes: move again* ×2 · *Master Key: look at the top card of any deck* ×1 | Small boosts. Kept face up, played later on your turn (not your action). |
 
 ### Why it balances
 - True clues appear **3 times**, fakes only **once**: frequency tells you what to trust.
@@ -165,18 +171,17 @@ Each clue card shows **the object** (illustration + name + room), for example *"
 
 ## 7. The Phone: "Police Console" (no SQL knowledge needed)
 
-The query screen is a sentence with blanks, filled with dropdowns:
+The player **writes the query block by block** by tapping blocks. At each step, only the blocks that are valid SQL can be tapped, and a hint says what to do next:
 
 ```
- FIND guests WHERE [ Shoe size ▾ ] [ is ▾ ]      [ 44 ▾ ]
-              AND  [ Height ▾ ]    [ between ▾ ] [ 1.85 ] and [ 1.90 ]
-                                   [ RUN QUERY · 1 ; ]
+ > SELECT name FROM guests WHERE shoe = 44 AND height BETWEEN 1.85 AND 1.90 ;
+                                   [ RUN THE QUERY · 1 ; ]  (tap twice to confirm)
 ```
 
+- **Every column is open from the start** (age, height, shoe, hand, hair, glasses, smell), even without a clue about it (after playtest 1). The player's clues are shown above as a reminder, never filled in automatically.
+- Comparisons: `=`, `<>`, `>`, `<`, `BETWEEN … AND …`. The query is also translated into plain English.
 - The result is the **list of matching names**, or **"0 suspects found"**.
-- Under each result, a small box shows the real SQL:
-  `💡 SELECT name FROM guests WHERE shoe = 44 AND height BETWEEN 1.85 AND 1.90;`
-- **1 token = 1 query, max 2 conditions.** With 3–4 clues you need several queries and your notebook to cross-check.
+- **1 query per turn, 1 token, max 2 conditions.** The Run button asks for a second tap, so a slip of the finger never spends a token. With 3–4 clues you need several turns and your notebook to cross-check.
 - The phone **never shows the whole table**: you only see names that match.
 - Other screens: **scanner** (QR + backup code), **my clues** (list of scanned cards), **accuse**, and **host mode** (*End round*, W.A.T.S.O.N. updates).
 - End of game: *"You wrote 7 SQL queries tonight!"* with the full list.
@@ -276,7 +281,7 @@ Round 4: height 1.85–1.90 m · Round 8: blond · Round 12: smells of cigar. Ea
 - **No prior SQL needed**: players read sentences, and the real SQL is always visible.
 - **Physical + digital**: the board gives the clues, the phone gives the answers.
 - **English everywhere**: clue cards, the accusation speech, table talk.
-- **Replayable**: the same cards, with new cases added to the app.
+- **One case, built to grow**: the cards only show objects, so new cases could be added to the app later.
 
 ---
 

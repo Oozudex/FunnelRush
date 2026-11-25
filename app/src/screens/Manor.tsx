@@ -72,9 +72,9 @@ export default function Manor() {
       <div className="file margin">
         <Label>How to play</Label>
         <ol className="small" style={{ margin: '8px 0 0', paddingLeft: 18, display: 'grid', gap: 6 }}>
-          <li><b>Move</b> up to 2 rooms.</li>
-          <li><b>One action:</b> search the room (scan up to {game.scansPerTurn} cards), recharge (Server Room) or accuse (Library).</li>
-          <li><b>Query</b> W.A.T.S.O.N. with your clues: 1 token each.</li>
+          <li><b>Move</b> up to 2 rooms. <b>Once</b> on the way, search: draw and scan <b>1 card</b>.</li>
+          <li><b>Or, instead of searching:</b> recharge (Server Room) or accuse (Library).</li>
+          <li><b>Anytime on your turn:</b> ONE query for 1 token. Bonus cards: play them on your turn.</li>
           <li>A clue found twice is probably true. 0 suspects found? One clue is fake!</li>
         </ol>
       </div>

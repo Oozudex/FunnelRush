@@ -36,7 +36,7 @@ export function link(
     }
     clients.push(c);
     c.on('connect', () => {
-      c.subscribe(topics, { qos: 0 });
+      c.subscribe(topics, { qos: 1 });
       onConn();
     });
     c.on('close', () => !dead && onConn());

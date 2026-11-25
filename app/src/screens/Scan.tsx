@@ -20,10 +20,7 @@ export function EvidenceCard({ item, note }: { item: EvidenceItem; note?: string
       {item.kind === 'trait' && attr && (
         <>
           <span className="stamp">Clue: {describe(attr, item.condition!)}</span>
-          <p className="foot row" style={{ gap: 8 }}>
-            <span style={{ width: 18, flex: 'none' }}>{Icon.lock}</span>
-            <span><b>{attr.column}</b> is now unlocked in the Police Console.</span>
-          </p>
+          <p className="foot">Use the column <b>{attr.column}</b> in the Police Console.</p>
         </>
       )}
       {item.kind === 'deadend' && <span className="stamp grey">Dead end</span>}

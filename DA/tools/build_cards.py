@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Clue cards V2 (2026-11-25): 34 evidence cards to scan + 6 printed bonus cards,
+"""Clue cards V2 (2026-11-25): 34 evidence cards to scan + 6 bonus cards (effect printed, QR to keep them in the app),
 "Case File" style, 63 x 88 mm. Data: game design section 8 (Case 1).
 
 The scannable cards never print the clue: only the object, its room and a QR code.
@@ -193,8 +193,10 @@ def bonus_face(room, name, key, effect, text_, code):
     main = (f'<div class="photo"><div class="tape"></div><div class="ph">{card_art.art(key, room)}</div><div class="cap">BONUS</div></div>'
             f'<div class="obj">{bp.esc(name)}</div><div class="effect">{effect}</div>'
             f'<div class="hint2">{bp.esc(text_)}</div>')
-    foot = (f'<div class="ft noqr"><span class="lbl">USE ON YOUR TURN, THEN DISCARD</span>'
-            f'<span class="deck">{bp.icon(room_ic, "2.6mm", 2.6)} {room}</span></div>')
+    # playtest 1: bonus cards are kept and played later in the app, so they get a QR too
+    foot = (f'<div class="ft"><div class="qr" data-code="{code}"></div><div class="meta">'
+            f'<span class="lbl">KEEP IT FACE UP &#183; PLAY IT ON YOUR TURN</span><span class="code">{code}</span>'
+            f'<span class="deck">{bp.icon(room_ic, "2.6mm", 2.6)} DECK: {room}</span></div></div>')
     stamp = '<div class="margin"></div>' + bp.PAPERCLIP + '<div class="stamp">BONUS</div>'
     return (f'<div class="card t-{bp.THEME}">{bp.frame_svg(AMBER)}{stamp}'
             f'<div class="in">{head}<div class="mn" style="gap:1.6mm">{main}</div>{foot}</div></div>')

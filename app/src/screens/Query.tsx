@@ -98,7 +98,7 @@ const HINT: Record<State, string> = {
   FROM: 'FROM: in which table do you look?',
   TABLE: 'W.A.T.S.O.N. keeps the guest file in the table guests.',
   WHERE: 'WHERE: now say who you are looking for.',
-  COL: 'Pick a column to filter. Your clues unlocked some of them.',
+  COL: 'Pick a column to filter. Use your clues: what do you know about the killer?',
   OP: 'How do you compare? = is, <> is not, > more than, < less than.',
   VAL: 'Pick the value.',
   BAND: 'BETWEEN needs two values: value AND value.',
@@ -120,6 +120,8 @@ export default function PoliceConsole({ crossed, onClose }: { crossed: string[];
   const [toks, setToks] = useState<Tok[]>([]);
   const [last, setLast] = useState<QueryRecord | null>(null);
   const [busy, setBusy] = useState(false);
+  const [confirm, setConfirm] = useState(false);
+  const used = view.game.queried;
 
   // clues = reminder only, never filled in automatically
   const clues = useMemo(() => {
@@ -133,7 +135,6 @@ export default function PoliceConsole({ crossed, onClose }: { crossed: string[];
     }
     return [...m.values()];
   }, [view.me.evidence, updates]);
-  const unlocked = new Set(clues.map((c) => c.c.attr));
 
   const { state, conds, curAttr } = analyse(toks);
   const curA = attrs.find((a) => a.key === curAttr);
@@ -153,6 +154,13 @@ export default function PoliceConsole({ crossed, onClose }: { crossed: string[];
     (k === 'AND' && (state === 'BAND' || (state === 'NEXT' && conds.length < MAX_CONDS)));
 
   const run = async () => {
+    // a first tap asks to confirm: a slip of the finger never spends a token
+    if (!confirm) {
+      setConfirm(true);
+      setTimeout(() => setConfirm(false), 4000);
+      return;
+    }
+    setConfirm(false);
     setBusy(true);
     try {
       const rec = await emit<QueryRecord>('query:run', conds);
@@ -180,21 +188,12 @@ export default function PoliceConsole({ crossed, onClose }: { crossed: string[];
     palette = <button className="blk" onClick={() => add({ k: 'table', v: caseInfo.table })}>{caseInfo.table}</button>;
   } else if (state === 'COL') {
     paletteLabel = 'Columns';
-    palette = attrs.map((a) => {
-      const open = unlocked.has(a.key);
-      return (
-        <button
-          key={a.key}
-          className={`blk ${open ? '' : 'locked'}`}
-          disabled={!open}
-          title={open ? a.label : 'Locked: find a clue about it first'}
-          onClick={() => add({ k: 'col', v: a.key })}
-        >
-          {a.column}
-          <small>{open ? a.label : 'locked'}</small>
-        </button>
-      );
-    });
+    palette = attrs.map((a) => (
+      <button key={a.key} className="blk" title={a.label} onClick={() => add({ k: 'col', v: a.key })}>
+        {a.column}
+        <small>{a.label}</small>
+      </button>
+    ));
   } else if (state === 'OP') {
     paletteLabel = 'Compare';
     palette = (['=', '<>', '>', '<'] as SqlOp[])
@@ -218,7 +217,7 @@ export default function PoliceConsole({ crossed, onClose }: { crossed: string[];
     <Sheet title="Police Console" icon={Icon.console} onClose={onClose} full>
       <div className="stack">
         <div className="row spread">
-          <span className="small muted">1 query = 1 token</span>
+          <span className="small muted">1 query per turn = 1 token</span>
           <Tokens n={me.tokens} max={caseInfo.maxTokens} />
         </div>
 
@@ -281,8 +280,9 @@ export default function PoliceConsole({ crossed, onClose }: { crossed: string[];
             </p>
           </div>
         )}
-        <button className="btn red big block" disabled={!complete || busy || me.tokens < 1} onClick={run}>
-          {busy ? 'Running…' : <>Run the query <span className="tok">;</span></>}
+        {used && !last && <p className="small red center"><b>You already ran your query this turn.</b> Only 1 query per turn.</p>}
+        <button className={`btn ${confirm ? 'primary' : 'red'} big block`} disabled={!complete || busy || me.tokens < 1 || used} onClick={run}>
+          {busy ? 'Running…' : used ? 'Query done for this turn' : confirm ? <>Tap again to spend 1 <span className="tok">;</span></> : <>Run the query <span className="tok">;</span></>}
         </button>
         {me.tokens < 1 && <p className="small red center">No token left: recharge in the Server Room or wait for the next W.A.T.S.O.N. update.</p>}
 

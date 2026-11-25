@@ -142,16 +142,18 @@ def pages():
     """))
     # 4 ---------------------------------------------------------------- your turn
     P.append(page(4, "YOUR TURN", f"""
-      <h1><small>&gt; MOVE, ACT, QUERY</small>Your Turn</h1><div class="rule"></div>
-      <div class="turn"><div class="ico">{ic("steps", "8mm", 2)}</div><div><h3>1. Move</h3>
-        <p>Move your pawn <b>up to 2 rooms</b> through the doors. You may also stay.</p></div></div>
-      <div class="turn"><div class="ico">{ic("magnifier", "8mm", 2)}</div><div><h3>2. Act: one of these</h3>
-        <p><b>Search</b>: draw the top card of the room deck. Scan it (or read it) <b>secretly</b> and keep it face down in front of you.
-        An empty deck means the room has been searched clean.</p>
+      <h1><small>&gt; MOVE, SEARCH, QUERY</small>Your Turn</h1><div class="rule"></div>
+      <div class="turn"><div class="ico">{ic("steps", "8mm", 2)}</div><div><h3>1. Move and search</h3>
+        <p>Move your pawn <b>up to 2 rooms</b> through the doors. You may also stay.</p>
+        <p><b>Search</b>: <b>once</b> during your move (before it, halfway or at the end), draw the <b>top card</b> of the room you are in.
+        Scan it <b>secretly</b> and keep it face down in front of you (never put it back). <b>Only 1 card per turn.</b>
+        An empty deck means the room has been searched clean.</p></div></div>
+      <div class="turn"><div class="ico">{ic("magnifier", "8mm", 2)}</div><div><h3>2. Or, instead of searching</h3>
         <p><b>Recharge</b> <i>(Server Room only)</i>: refill up to <b>3 tokens</b>. You can never have more than 3.</p>
         <p><b>Accuse</b> <i>(Library only)</i>: see page 7.</p></div></div>
-      <div class="turn"><div class="ico" style="background:{RED};border-left-color:{NOIR}">{ic("terminal", "8mm", 2)}</div><div><h3>Anytime: Query</h3>
-        <p>During your turn, pay <b>1 {tk()}</b> to run one search on your phone, with <b>up to 2 conditions</b>. You can query several times if you have the tokens.</p></div></div>
+      <div class="turn"><div class="ico" style="background:{RED};border-left-color:{NOIR}">{ic("terminal", "8mm", 2)}</div><div><h3>Anytime: Query (once)</h3>
+        <p>During your turn, pay <b>1 {tk()}</b> to run <b>one</b> search on your phone, with <b>up to 2 conditions</b>. <b>Only 1 query per turn.</b></p>
+        <p><b>Bonus cards</b>: play one you kept, at any time on your turn. It is not your action.</p></div></div>
       <div class="box"><div class="t">&gt; THE SERVER ROOM</div><p>It is in the corner <b>opposite the Library</b> and has no cards. Going there to recharge costs you a search: choose the right moment!</p></div>
     """))
     # 5 ---------------------------------------------------------------- clues
@@ -165,21 +167,21 @@ def pages():
         <tr><td>Dead end</td><td>True, but useless to find the killer.</td></tr>
         <tr><td style="color:{RED}">Fake clue</td><td>Planted by the killer. Only <b>1 copy</b>, and it contradicts the real clues.</td></tr>
       </table>
-      {crow("gre-01.png", "Evidence &#215; 34", "Scan it secretly in the Police Console, then keep it face down. Write what you learn in your notebook.")}
-      {crow("obs-06-bonus.png", "Bonus &#215; 6", f"Printed, never scanned. Spare Battery: +1 {tk()}. Running Shoes: move again. Master Key: peek at the top card of any deck.")}
+      {crow("gre-01.png", "Evidence &#215; 34", "Scan it secretly, then keep it <b>face down in front of you</b>. Never put it back: the app remembers it too (tab Clues).")}
+      {crow("obs-06-bonus.png", "Bonus &#215; 6", f"Scan it, then keep it <b>face up</b>. Play it later on your turn (tab Clues), then discard it. Battery: +1 {tk()}. Shoes: move again. Key: peek at a deck.")}
       <h2>&gt; GOLDEN RULES</h2>
       <div class="say" style="font-size:10.5pt">&#8220;Find the same clue <b>twice</b>, and it&#8217;s probably true.&#8221;</div>
       <div class="say" style="font-size:10.5pt">&#8220;<b style="color:{RED}">0 suspects found?</b> One of your clues is fake!&#8221;</div>
+      <div class="say" style="font-size:10.5pt">&#8220;<b style="color:{RED}">Blond hair and red hair?</b> Two clues disagree: one is planted. Trust the one you found twice.&#8221;</div>
     """))
     # 6 ---------------------------------------------------------------- the phone + watson
     P.append(page(6, "THE PHONE", f"""
       <h1><small>&gt; NO SQL NEEDED</small>The Police Console</h1><div class="rule"></div>
-      <p>The query screen is a sentence with blanks. Fill them with the menus, then run it for <b style="white-space:nowrap">1 {tk()}</b>.</p>
-      <div class="code" style="font-size:8.6pt">FIND guests WHERE [shoe size] <span class="k">is</span> [44]<br>&#8195;&#8195;&#8195;&#8195;&#8195;&#8195;<span class="k">AND</span> [height] <span class="k">between</span> [1.85] and [1.90]
-      <br><span class="c">&#8594; 2 suspects found: Oscar Lindqvist, Hugo Ravenscroft</span><br>
-      <span class="c">SQL: SELECT name FROM guests WHERE shoe = 44 AND height BETWEEN 1.85 AND 1.90;</span></div>
-      <p style="margin-top:2.4mm">You only see the <b>names that match</b>, never the whole table. That is why one query is not enough:
-      with 3 or 4 clues you need several queries and your notebook to cross-check.</p>
+      <p>Write your query <b>block by block</b>: tap SELECT, name, FROM, guests, WHERE, then a column, a comparison and a value. Only the blocks that make sense light up. <b>Every column is open</b>, even without a clue. Tap <b>Run</b> twice to pay <b style="white-space:nowrap">1 {tk()}</b>.</p>
+      <div class="code" style="font-size:8.6pt"><span class="k">SELECT</span> name <span class="k">FROM</span> guests<br><span class="k">WHERE</span> shoe = 44 <span class="k">AND</span> height <span class="k">BETWEEN</span> 1.85 <span class="k">AND</span> 1.90;
+      <br><span class="c">&#8594; 2 suspects found: Oscar Lindqvist, Hugo Ravenscroft</span></div>
+      <p style="margin-top:2.4mm">You only see the <b>names that match</b>, never the whole table. With <b>1 query per turn</b>,
+      you need several turns and your notebook to cross-check 3 or 4 clues.</p>
       <div class="box red"><div class="t">&gt; 0 SUSPECTS FOUND</div><p>Nobody matches both conditions: <b>one of your two clues is fake</b>. Try them separately to find which one.</p></div>
       <h2>&gt; W.A.T.S.O.N. UPDATES</h2>
       <p>Every <b>4 rounds</b> (rounds 4, 8 and 12) the host taps <b>End round</b> and the app:</p>
