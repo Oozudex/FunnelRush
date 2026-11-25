@@ -62,7 +62,7 @@
 > **① MOVE**: move up to **2 rooms**. You may also stay.
 >
 > **② ACT**: do ONE thing in your room:
-> - **Search**: draw the top card of the room deck. Read it secretly and keep it face down in front of you.
+> - **Search**: draw **up to 2 cards** from the top of the room deck, one at a time. Read them secretly and keep them face down in front of you.
 > - **Recharge** *(Server Room only)*: refill up to **3 tokens**.
 > - **Accuse** *(Library only)*: see below.
 >

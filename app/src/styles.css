@@ -583,3 +583,40 @@ details > summary { list-style: none; }
 details > summary::-webkit-details-marker { display: none; }
 details > summary::before { content: '▸ '; color: var(--red); }
 details[open] > summary::before { content: '▾ '; }
+
+/* ------------------------------------------------------------ SQL composer */
+.sqlline {
+  min-height: 92px; background: #000; border: 2px solid var(--bone); padding: 12px;
+  display: flex; flex-wrap: wrap; gap: 6px; align-content: flex-start;
+  font-family: var(--f-mono); font-weight: 700; font-size: 16px;
+}
+.stok { padding: 3px 7px; border: 1.5px solid #3a3a40; background: var(--graphite-2); }
+.stok.kw { color: var(--red); border-color: var(--oxblood); }
+.stok.col, .stok.field { color: var(--amber); }
+.stok.table { color: var(--blue); }
+.stok.op { color: var(--bone); }
+.stok.val { color: #9fd8a8; }
+.caret { width: 10px; height: 24px; background: var(--red); animation: blink 1s steps(1) infinite; align-self: center; }
+@keyframes blink { 50% { opacity: 0; } }
+.hint { margin: 0; font-size: 14px; color: var(--amber); min-height: 40px; }
+.kbd { display: flex; flex-direction: column; gap: 10px; }
+.kbd-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.kbd-lbl { width: 100%; font-family: var(--f-pix); font-size: 10px; text-transform: uppercase; color: var(--ash); letter-spacing: 0.06em; }
+.blk {
+  min-height: 46px; min-width: 46px; padding: 6px 11px; cursor: pointer;
+  font-family: var(--f-mono); font-weight: 700; font-size: 15px;
+  background: var(--graphite-2); border: 2px solid var(--bone); box-shadow: 0 3px 0 #000;
+  display: inline-flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1.1;
+}
+.blk small { font-family: var(--f-body); font-size: 10px; font-weight: 600; opacity: 0.8; }
+.blk:active:not(:disabled) { transform: translateY(2px); box-shadow: 0 1px 0 #000; }
+.blk.kw { color: var(--red); border-color: var(--red); }
+.blk.col, .blk.field { color: var(--amber); border-color: var(--amber); }
+.blk.table { color: var(--blue); border-color: var(--blue); }
+.blk.val { color: #9fd8a8; border-color: #4f8a5a; }
+.blk:disabled { opacity: 0.22; cursor: not-allowed; box-shadow: none; }
+.blk:not(:disabled) { animation: ready 1.4s ease-in-out infinite; }
+@keyframes ready { 50% { box-shadow: 0 3px 0 #000, 0 0 0 3px rgba(227, 27, 59, 0.25); } }
+@media (prefers-reduced-motion: reduce) { .blk:not(:disabled), .caret { animation: none; } }
+
+.sheet.full .inner > * { flex-shrink: 0; }

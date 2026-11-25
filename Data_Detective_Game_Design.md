@@ -95,7 +95,7 @@ The killer left traces all over the manor, and also **planted fake clues** to tr
 **① MOVE**: move up to **2 rooms** along corridors. You may also stay.
 
 **② ACT**: do ONE thing in your room:
-- **Search**: draw the top card of the room deck. Scan it (or read it) secretly and keep it face down in front of you. If the deck is empty, the room has been searched clean.
+- **Search**: draw **up to 2 cards** from the top of the room deck, one at a time. Scan them (or read them) secretly and keep them face down in front of you. If the deck is empty, the room has been searched clean.
 - **Recharge** *(Server Room only)*: refill up to **3 tokens** (you can never have more than 3).
 - **Accuse** *(Library only)*: see below.
 
@@ -129,7 +129,7 @@ Then type the name in the app.
 Each clue card shows **the object** (illustration + name + room), for example *"MUDDY FOOTPRINT · Greenhouse"*, plus a **QR code** and a backup code.
 **Scanning it** shows what the object reveals **in the current case** (*"Size 44"*), or that it leads nowhere.
 
-- You still have to **walk to the room** to draw the card: the board stays essential.
+- You still have to **walk to the room** to draw its cards: the board stays essential.
 - The same card can be a true clue in one case and a dead end in another, so the game is **replayable** and can't be learned by heart.
 - **Bonus cards** are printed in full and are never scanned.
 - For the demo, the app ships with **Case 1: The Foxglove Tea** (§8).

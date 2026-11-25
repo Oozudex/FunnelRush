@@ -131,8 +131,8 @@ export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: '
 
       {/* ③ QUERY */}
       <div className="step">
-        <div className="step-title"><span className="num">3</span> Query W.A.T.S.O.N. <span className="muted small" style={{ marginLeft: 6 }}>(optional)</span></div>
-        <p className="small" style={{ margin: '0 0 10px' }}>Use your clues to find who matches. 1 search = 1 token.</p>
+        <div className="step-title"><span className="num">3</span> Write a SQL query <span className="muted small" style={{ marginLeft: 6 }}>(optional)</span></div>
+        <p className="small" style={{ margin: '0 0 10px' }}>Build a query with your clues to find who matches. 1 query = 1 token.</p>
         <button className="btn block" onClick={() => setConsoleOpen(true)} disabled={me.tokens < 1}>
           Open the Police Console <Tokens n={me.tokens} max={game.caseInfo.maxTokens} />
         </button>
