@@ -61,6 +61,9 @@ export function SectionTitle({ children }: { children: ReactNode }) {
 
 const P = { fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'square' as const };
 export const Icon = {
+  play: (
+    <svg viewBox="0 0 24 24" {...P}><path d="M7 4l12 8-12 8z" /></svg>
+  ),
   scan: (
     <svg viewBox="0 0 24 24" {...P}><path d="M3 8V3h5M16 3h5v5M21 16v5h-5M8 21H3v-5M7 12h10" /></svg>
   ),

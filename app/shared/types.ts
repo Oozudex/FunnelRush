@@ -92,6 +92,7 @@ export interface GameState {
   winnerId: string | null;
   solution: Solution | null;
   lastAccusation: { playerId: string; suspectName: string; correct: boolean; at: number } | null;
+  action: 'search' | 'recharge' | 'accuse' | null;  // the ONE action already done this turn
 }
 
 export interface EvidenceItem {

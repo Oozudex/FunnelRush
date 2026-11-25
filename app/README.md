@@ -44,11 +44,11 @@ Commit puis push le dossier `docs/` à la racine du dépôt. GitHub Pages est r�
 |---|---|
 | **Home** | Créer une partie (code type `RAVEN-42`) ou en rejoindre une (QR qui pré-remplit le code, ou saisie manuelle). |
 | **Waiting room** | Code + QR, liste des détectives en temps réel, choix du pion P1–P4, l'hôte choisit qui commence (le plus jeune) et lance la partie. |
-| **Scan** | Scanner QR via la caméra (`TLQ:LIB-01`) ou code de secours (`LIB-01`, `lib01`…). Révèle l'indice en privé. Un trait débloque la colonne correspondante dans la console. Les codes Spare Battery donnent +1 jeton (une fois par carte). |
-| **Query** | Phrase à blocs : `FIND guests WHERE [colonne] [opérateur] [valeur] AND …` (2 conditions max). Les colonnes restent 🔒 tant qu'aucun indice ne les concerne. Coût : 1 `;`, uniquement pendant son tour. Le vrai SQL est affiché, le résultat est privé, et « 0 SUSPECTS FOUND » s'affiche avec un effet glitch. Historique des requêtes. |
+| **Play** | **Ton tour, guidé pas à pas :** ① déplacer son pion ② faire UNE action (fouiller la pièce = scanner une carte, recharger en Server Room, accuser à la Library) ③ interroger W.A.T.S.O.N. (facultatif) ④ fin du tour. **Pas ton tour :** « X is playing », et rien n'est jouable. Le moteur bloque aussi toute action hors de son tour et toute deuxième action dans le même tour. |
+| **Police Console** | On coche 1 ou 2 de ses indices, puis on lance la recherche (1 `;`). La phrase en anglais et le vrai SQL sont affichés, le résultat est privé, et « 0 SUSPECTS FOUND » s'affiche avec un effet glitch. Une condition libre est possible (repliée), mais seulement sur les colonnes débloquées 🔒. |
 | **Clues** | Indices regroupés par trait avec « seen ×N » (règle d'or), mises à jour W.A.T.S.O.N. confirmées, culs-de-sac, bonus. |
-| **Suspects** | Carnet privé : 12 suspects à cocher ✗, interrogatoire (déclaration de chaque suspect), notes, nombre d'apparitions dans les résultats. |
-| **Manor** | Tour en cours, Recharge (Server Room), Accuse (Library), fin de tour, ordre des joueurs et jetons, journal. **Hôte** : finir la manche, passer le tour d'un absent, afficher le QR, terminer la partie (le tueur s'échappe). |
+| **Suspects** | Carnet privé : 12 suspects à cocher ✗, interrogatoire (déclaration de chaque suspect), notes. |
+| **Game** | Ordre des joueurs et jetons, prochaine mise à jour W.A.T.S.O.N., règles en 4 lignes, contrôles de l'hôte (passer le tour d'un absent, finir la manche, QR, terminer la partie), journal. |
 | **Overlays** | Mise à jour W.A.T.S.O.N. à la fin des manches 4, 8 et 12 (un trait vrai + 1 `;` pour tous), mauvaise accusation (retour au Grand Hall, jetons à 0). |
 | **Fin** | Victoire ou défaite, solution complète, « You wrote N SQL queries tonight! » avec la liste. |
 

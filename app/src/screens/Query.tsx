@@ -2,13 +2,9 @@ import { useMemo, useState } from 'react';
 import type { AttributeDef, Condition, Op, QueryRecord } from '../../shared/types';
 import { buildSql, describe, fmtValue, OP_LABEL, opsFor } from '../../shared/sql';
 import { buzz, emit } from '../socket';
-import { Glitch, SectionTitle, useGame, useMe } from '../ui';
+import { Glitch, Tokens, useGame, useMe } from '../ui';
 
-interface Draft { attr?: string; op: Op; value?: string | number; value2?: number }
-
-function complete(d: Draft): d is Required<Pick<Draft, 'attr' | 'value'>> & Draft {
-  return !!d.attr && d.value !== undefined && (d.op !== 'between' || d.value2 !== undefined);
-}
+const same = (a: Condition, b: Condition) => JSON.stringify(a) === JSON.stringify(b);
 
 function SqlPreview({ sql }: { sql: string }) {
   const parts = sql.split(/\b(SELECT|FROM|WHERE|AND|BETWEEN)\b/);
@@ -19,104 +15,13 @@ function SqlPreview({ sql }: { sql: string }) {
   );
 }
 
-function defaultValue(a: AttributeDef): string | number {
-  return a.options[Math.floor(a.options.length / 2)];
-}
-
-function Block({
-  d, idx, attrs, unlocked, onChange, onRemove,
-}: {
-  d: Draft; idx: number; attrs: AttributeDef[]; unlocked: Set<string>;
-  onChange: (d: Draft) => void; onRemove?: () => void;
-}) {
-  const a = attrs.find((x) => x.key === d.attr);
-  return (
-    <div className="block">
-      <div className="row spread" style={{ marginBottom: 10 }}>
-        <span className="kw">{idx === 0 ? 'WHERE' : 'AND'}</span>
-        {onRemove && (
-          <button className="btn ghost small" onClick={onRemove} aria-label="Remove condition">✕</button>
-        )}
-      </div>
-      {!a ? (
-        <div className="attrgrid">
-          {attrs.map((x) => {
-            const open = unlocked.has(x.key);
-            return (
-              <button
-                key={x.key}
-                className={`attr ${open ? '' : 'locked'}`}
-                disabled={!open}
-                title={open ? x.label : 'Locked: scan evidence about it first'}
-                onClick={() => onChange({ attr: x.key, op: '=', value: defaultValue(x) })}
-              >
-                {open ? '' : '🔒'} {x.label}
-              </button>
-            );
-          })}
-        </div>
-      ) : (
-        <div className="stack" style={{ gap: 8 }}>
-          <div className="row" style={{ gap: 8 }}>
-            <button className="attr on grow" style={{ minHeight: 52 }} onClick={() => onChange({ op: '=' })}>
-              {a.label} ▾
-            </button>
-            <select
-              className="select"
-              style={{ width: 'auto', minWidth: 130 }}
-              value={d.op}
-              aria-label="Operator"
-              onChange={(e) => {
-                const op = e.target.value as Op;
-                const i = a.options.indexOf(d.value as never);
-                onChange({ ...d, op, value2: op === 'between' ? (a.options[Math.min(a.options.length - 1, i + 3)] as number) : undefined });
-              }}
-            >
-              {opsFor(a).map((o) => (
-                <option key={o} value={o}>{OP_LABEL[o]}</option>
-              ))}
-            </select>
-          </div>
-          <div className="row" style={{ gap: 8 }}>
-            <select
-              className="select grow"
-              aria-label="Value"
-              value={String(d.value)}
-              onChange={(e) => onChange({ ...d, value: a.type === 'number' ? Number(e.target.value) : e.target.value })}
-            >
-              {a.options.map((o) => (
-                <option key={String(o)} value={String(o)}>{fmtValue(a, o)}{a.type === 'number' && a.unit ? ` ${a.unit}` : ''}</option>
-              ))}
-            </select>
-            {d.op === 'between' && (
-              <>
-                <span className="kw">AND</span>
-                <select
-                  className="select grow"
-                  aria-label="Upper value"
-                  value={String(d.value2)}
-                  onChange={(e) => onChange({ ...d, value2: Number(e.target.value) })}
-                >
-                  {a.options.map((o) => (
-                    <option key={String(o)} value={String(o)}>{fmtValue(a, o)}</option>
-                  ))}
-                </select>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 export function ResultTable({ rec, crossed, suspects }: { rec: QueryRecord; crossed: string[]; suspects: { id: string; name: string; link: string }[] }) {
   if (rec.names.length === 0)
     return (
       <div className="zero panel alert">
         <div className="h2"><Glitch text="0 SUSPECTS FOUND" hard /></div>
-        <p className="mono" style={{ marginTop: 10 }}>Empty result. One of your conditions is false.</p>
-        <p className="small muted" style={{ margin: 0 }}>Golden rule: 0 suspects found? One of your clues is fake!</p>
+        <p className="mono" style={{ marginTop: 10 }}>Nobody matches all your conditions.</p>
+        <p className="small muted" style={{ margin: 0 }}>Golden rule: one of your clues is fake!</p>
       </div>
     );
   return (
@@ -139,30 +44,69 @@ export function ResultTable({ rec, crossed, suspects }: { rec: QueryRecord; cros
         </tbody>
       </table>
       <div className="pix muted" style={{ padding: '8px 10px', fontSize: 11 }}>
-        {rec.names.length} row{rec.names.length > 1 ? 's' : ''} · private result
+        {rec.names.length} suspect{rec.names.length > 1 ? 's' : ''} found · only you see this
       </div>
     </div>
   );
 }
 
-export default function Query({ crossed }: { crossed: string[] }) {
+/** "Write your own condition": one line, only with the columns your clues unlocked. */
+function CustomCondition({ attrs, onAdd }: { attrs: AttributeDef[]; onAdd: (c: Condition) => void }) {
+  const [key, setKey] = useState(attrs[0]?.key ?? '');
+  const a = attrs.find((x) => x.key === key) ?? attrs[0];
+  const [op, setOp] = useState<Op>('=');
+  const [value, setValue] = useState<string>('');
+  const [value2, setValue2] = useState<string>('');
+  if (!a) return <p className="small muted">Scan evidence first: each clue unlocks a column 🔒.</p>;
+  const opts = a.options.map(String);
+  const v = opts.includes(value) ? value : opts[Math.floor(opts.length / 2)];
+  const v2 = opts.includes(value2) ? value2 : opts[Math.min(opts.length - 1, opts.indexOf(v) + 3)];
+  const num = (x: string) => (a.type === 'number' ? Number(x) : x);
+  const label = (x: string | number) => `${fmtValue(a, x)}${a.type === 'number' && a.unit ? ` ${a.unit}` : ''}`;
+  return (
+    <div className="stack" style={{ gap: 8 }}>
+      <div className="row" style={{ gap: 8 }}>
+        <select className="select grow" aria-label="Column" value={a.key} onChange={(e) => { setKey(e.target.value); setOp('='); setValue(''); }}>
+          {attrs.map((x) => <option key={x.key} value={x.key}>{x.label}</option>)}
+        </select>
+        <select className="select" style={{ width: 'auto' }} aria-label="Operator" value={op} onChange={(e) => setOp(e.target.value as Op)}>
+          {opsFor(a).map((o) => <option key={o} value={o}>{OP_LABEL[o]}</option>)}
+        </select>
+      </div>
+      <div className="row" style={{ gap: 8 }}>
+        <select className="select grow" aria-label="Value" value={v} onChange={(e) => setValue(e.target.value)}>
+          {a.options.map((o) => <option key={String(o)} value={String(o)}>{label(o)}</option>)}
+        </select>
+        {op === 'between' && (
+          <>
+            <span className="kw">AND</span>
+            <select className="select grow" aria-label="Upper value" value={v2} onChange={(e) => setValue2(e.target.value)}>
+              {a.options.map((o) => <option key={String(o)} value={String(o)}>{label(o)}</option>)}
+            </select>
+          </>
+        )}
+      </div>
+      <button
+        className="btn block"
+        onClick={() => onAdd({ attr: a.key, op, value: num(v), ...(op === 'between' ? { value2: Number(v2) } : {}) })}
+      >
+        + Add this condition
+      </button>
+    </div>
+  );
+}
+
+/** Police Console: tick 1 or 2 of your clues, run, read the private result. */
+export default function PoliceConsole({ crossed, onClose }: { crossed: string[]; onClose: () => void }) {
   const { view, toast } = useGame();
-  const { me, myTurn, current } = useMe(view);
+  const { me } = useMe(view);
   const { caseInfo, updates } = view.game;
   const attrs = caseInfo.attributes;
-  const [drafts, setDrafts] = useState<Draft[]>([{ op: '=' }]);
+  const [picked, setPicked] = useState<Condition[]>([]);
   const [last, setLast] = useState<QueryRecord | null>(null);
   const [busy, setBusy] = useState(false);
 
-  const unlocked = useMemo(() => {
-    const s = new Set<string>();
-    view.me.evidence.forEach((e) => e.condition && s.add(e.condition.attr));
-    updates.forEach((u) => u.condition && s.add(u.condition.attr));
-    return s;
-  }, [view.me.evidence, updates]);
-
-  // Quick-fill chips: every distinct clue you hold
-  const chips = useMemo(() => {
+  const clues = useMemo(() => {
     const m = new Map<string, { c: Condition; confirmed: boolean; n: number }>();
     for (const u of updates) if (u.condition) m.set(JSON.stringify(u.condition), { c: u.condition, confirmed: true, n: 0 });
     for (const e of view.me.evidence) {
@@ -171,27 +115,27 @@ export default function Query({ crossed }: { crossed: string[] }) {
       const prev = m.get(k);
       m.set(k, { c: e.condition, confirmed: prev?.confirmed ?? false, n: (prev?.n ?? 0) + 1 });
     }
-    return [...m.values()];
+    return [...m.values()].sort((x, y) => Number(y.confirmed) - Number(x.confirmed) || y.n - x.n);
   }, [view.me.evidence, updates]);
 
-  const ready = drafts.filter(complete);
-  const allReady = ready.length === drafts.length && ready.length > 0;
-  const sql = buildSql(caseInfo.table, attrs, ready as Condition[]);
+  const unlockedAttrs = attrs.filter((a) => clues.some((c) => c.c.attr === a.key));
 
-  const addChip = (c: Condition) => {
-    const nd: Draft = { ...c };
-    setDrafts((ds) => {
-      const empty = ds.findIndex((d) => !d.attr);
-      if (empty >= 0) return ds.map((d, i) => (i === empty ? nd : d));
-      if (ds.length < 2) return [...ds, nd];
-      return [ds[0], nd];
+  const toggle = (c: Condition) => {
+    setLast(null);
+    setPicked((p) => {
+      if (p.some((x) => same(x, c))) return p.filter((x) => !same(x, c));
+      if (p.length >= 2) {
+        toast('2 conditions max per query. Untick one first.');
+        return p;
+      }
+      return [...p, c];
     });
   };
 
   const run = async () => {
     setBusy(true);
     try {
-      const rec = await emit<QueryRecord>('query:run', ready);
+      const rec = await emit<QueryRecord>('query:run', picked);
       setLast(rec);
       buzz(rec.names.length ? 50 : [100, 50, 100]);
       setTimeout(() => document.getElementById('q-result')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
@@ -202,89 +146,93 @@ export default function Query({ crossed }: { crossed: string[] }) {
     }
   };
 
-  let reason = '';
-  if (!myTurn) reason = `Wait for your turn (${current?.name ?? '…'} is playing).`;
-  else if (me.tokens < 1) reason = 'No token left: recharge in the Server Room, or wait for the next W.A.T.S.O.N. update.';
-  else if (unlocked.size === 0) reason = 'Every column is locked 🔒. Scan evidence to unlock them.';
-  else if (!allReady) reason = 'Choose a column for each condition.';
+  const sentence = picked.map((c) => describe(attrs.find((a) => a.key === c.attr), c).toLowerCase()).join(' AND ');
 
   return (
-    <div className="stack">
-      <div>
-        <div className="h2">Police Console</div>
-        <p className="small muted">Search W.A.T.S.O.N.'s guest file. 1 query = <b className="red">1 ;</b> token, up to 2 conditions.</p>
-      </div>
-
-      {chips.length > 0 && (
-        <div>
-          <div className="pix muted" style={{ marginBottom: 8 }}>From your clues (tap to use)</div>
-          <div className="chips">
-            {chips.map(({ c, confirmed, n }) => (
-              <button key={JSON.stringify(c)} className={`chip ${confirmed ? 'confirmed' : ''}`} onClick={() => addChip(c)}>
-                {describe(attrs.find((a) => a.key === c.attr), c)}
-                {confirmed ? ' ✔' : n > 1 ? ` ×${n}` : ''}
-              </button>
-            ))}
+    <div className="sheet full" role="dialog" aria-modal="true" aria-label="Police Console">
+      <div className="inner stack">
+        <div className="row spread">
+          <div>
+            <div className="h2">Police Console</div>
+            <div className="small muted">Search W.A.T.S.O.N.'s guest file</div>
           </div>
+          <button className="btn ghost small" onClick={onClose} aria-label="Close">✕ Close</button>
         </div>
-      )}
-
-      <div className="sentence">
-        <span className="kw">FIND</span> guests…
-      </div>
-      {drafts.map((d, i) => (
-        <Block
-          key={i}
-          d={d}
-          idx={i}
-          attrs={attrs}
-          unlocked={unlocked}
-          onChange={(nd) => setDrafts((ds) => ds.map((x, j) => (j === i ? nd : x)))}
-          onRemove={drafts.length > 1 ? () => setDrafts((ds) => ds.filter((_, j) => j !== i)) : undefined}
-        />
-      ))}
-      {drafts.length < 2 && (
-        <button className="btn ghost block" onClick={() => setDrafts((ds) => [...ds, { op: '=' }])}>
-          + AND another condition
-        </button>
-      )}
-
-      <SqlPreview sql={sql} />
-
-      <button className="btn primary big block" disabled={!!reason || busy} onClick={run}>
-        {busy ? 'Querying…' : <>Run query · 1 <span style={{ fontSize: 24 }}>;</span></>}
-      </button>
-      {reason && <p className="small amber center" style={{ margin: 0 }}>{reason}</p>}
-
-      {last && (
-        <div id="q-result" className="stack" style={{ scrollMarginTop: 120 }}>
-          <SectionTitle>Result</SectionTitle>
-          <SqlPreview sql={last.sql} />
-          <ResultTable rec={last} crossed={crossed} suspects={caseInfo.suspects} />
+        <div className="row spread panel flat" style={{ padding: '8px 12px' }}>
+          <span className="small">1 search = 1 token</span>
+          <Tokens n={me.tokens} max={caseInfo.maxTokens} />
         </div>
-      )}
 
-      {view.me.queries.length > 0 && (
-        <>
-          <SectionTitle>Your queries tonight ({view.me.queries.length})</SectionTitle>
-          <div className="stack" style={{ gap: 8 }}>
-            {[...view.me.queries].reverse().map((q) => (
-              <details key={q.at} className="panel flat" style={{ padding: 10 }}>
-                <summary style={{ cursor: 'pointer', minHeight: 32 }}>
-                  <span className="mono small">{q.sql}</span>{' '}
-                  <span className={q.names.length ? 'amber' : 'red'} style={{ fontWeight: 800 }}>
-                    → {q.names.length} row{q.names.length === 1 ? '' : 's'}
+        <div className="step-title"><span className="num">1</span> Tick 1 or 2 of your clues</div>
+        {clues.length === 0 && <p className="small amber">No clue yet. Search a room and scan a card first.</p>}
+        <div className="stack" style={{ gap: 8 }}>
+          {clues.map(({ c, confirmed, n }) => {
+            const on = picked.some((x) => same(x, c));
+            return (
+              <button key={JSON.stringify(c)} className={`tick ${on ? 'on' : ''}`} onClick={() => toggle(c)} aria-pressed={on}>
+                <span className="box">{on ? '✓' : ''}</span>
+                <span className="grow">
+                  <span className="mono" style={{ fontWeight: 700 }}>{describe(attrs.find((a) => a.key === c.attr), c)}</span>
+                  <span className="small muted" style={{ display: 'block' }}>
+                    {confirmed ? '✔ confirmed by W.A.T.S.O.N.' : n > 1 ? `seen ×${n}: probably true` : 'seen once'}
                   </span>
-                </summary>
-                <div className="small" style={{ marginTop: 8 }}>
-                  {q.names.length ? q.names.join(' · ') : '0 suspects found'}
-                  <span className="muted"> (round {q.round})</span>
-                </div>
-              </details>
-            ))}
+                </span>
+              </button>
+            );
+          })}
+          {picked.filter((p) => !clues.some((c) => same(c.c, p))).map((c) => (
+            <button key={JSON.stringify(c)} className="tick on" onClick={() => toggle(c)} aria-pressed>
+              <span className="box">✓</span>
+              <span className="grow mono" style={{ fontWeight: 700 }}>{describe(attrs.find((a) => a.key === c.attr), c)}</span>
+            </button>
+          ))}
+        </div>
+
+        {clues.length > 0 && (
+          <details className="panel flat" style={{ padding: 12 }}>
+            <summary style={{ cursor: 'pointer', fontWeight: 800 }}>Or write your own condition</summary>
+            <div style={{ marginTop: 10 }}>
+              <CustomCondition attrs={unlockedAttrs} onAdd={(c) => (picked.some((x) => same(x, c)) ? null : toggle(c))} />
+            </div>
+          </details>
+        )}
+
+        <div className="step-title"><span className="num">2</span> Search</div>
+        <div className="panel flat" style={{ padding: 12 }}>
+          <p style={{ margin: '0 0 8px' }}>
+            {picked.length ? <>Find the guests whose <b>{sentence}</b>.</> : <span className="muted">Tick a clue above.</span>}
+          </p>
+          <SqlPreview sql={buildSql(caseInfo.table, attrs, picked)} />
+        </div>
+        <button className="btn primary big block" disabled={!picked.length || busy || me.tokens < 1} onClick={run}>
+          {busy ? 'Searching…' : <>Search · 1 <span style={{ fontSize: 24 }}>;</span></>}
+        </button>
+        {me.tokens < 1 && <p className="small amber center" style={{ margin: 0 }}>No token left: recharge in the Server Room or wait for the next W.A.T.S.O.N. update.</p>}
+
+        {last && (
+          <div id="q-result" className="stack" style={{ scrollMarginTop: 20 }}>
+            <div className="step-title"><span className="num">3</span> Result</div>
+            <ResultTable rec={last} crossed={crossed} suspects={caseInfo.suspects} />
+            <p className="small muted" style={{ margin: 0 }}>Cross out the others in the Suspects tab.</p>
           </div>
-        </>
-      )}
+        )}
+
+        {view.me.queries.length > 0 && (
+          <details className="panel flat" style={{ padding: 12 }}>
+            <summary style={{ cursor: 'pointer', fontWeight: 800 }}>My previous searches ({view.me.queries.length})</summary>
+            <div className="stack" style={{ gap: 8, marginTop: 10 }}>
+              {[...view.me.queries].reverse().map((q) => (
+                <div key={q.at} className="small">
+                  <div className="mono">{q.sql}</div>
+                  <div className={q.names.length ? 'amber' : 'red'}>→ {q.names.length ? q.names.join(' · ') : '0 suspects found'}</div>
+                </div>
+              ))}
+            </div>
+          </details>
+        )}
+
+        <button className="btn ghost block" onClick={onClose}>Back to my turn</button>
+      </div>
     </div>
   );
 }

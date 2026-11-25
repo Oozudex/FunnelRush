@@ -3,7 +3,7 @@ import jsQR from 'jsqr';
 import type { EvidenceItem, ScanResult } from '../../shared/types';
 import { describe } from '../../shared/sql';
 import { buzz, emit } from '../socket';
-import { SectionTitle, useGame } from '../ui';
+import { useGame } from '../ui';
 
 export function EvidenceCard({ item, note }: { item: EvidenceItem; note?: string }) {
   const { view } = useGame();
@@ -114,10 +114,10 @@ function Camera({ onCode }: { onCode: (code: string) => void }) {
   );
 }
 
-export default function Scan() {
-  const { view, toast } = useGame();
+/** Camera + backup code. Used by the "Search the room" action of the Play screen. */
+export function ScanPanel({ onResult }: { onResult: (r: ScanResult) => void }) {
+  const { toast } = useGame();
   const [code, setCode] = useState('');
-  const [result, setResult] = useState<ScanResult | null>(null);
   const [busy, setBusy] = useState(false);
 
   const submit = async (raw: string) => {
@@ -125,10 +125,9 @@ export default function Scan() {
     setBusy(true);
     try {
       const r = await emit<ScanResult>('card:scan', raw);
-      setResult(r);
       setCode('');
       buzz(r.item.kind === 'trait' ? [40, 30, 120] : 40);
-      setTimeout(() => document.getElementById('scan-result')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+      onResult(r);
     } catch (e) {
       toast((e as Error).message);
     } finally {
@@ -136,26 +135,20 @@ export default function Scan() {
     }
   };
 
-  const count = view.me.evidence.filter((e) => e.kind !== 'bonus').length;
-
   return (
     <div className="stack">
-      <div>
-        <div className="h2">Scan evidence</div>
-        <p className="small muted">Search a room on the board, then scan the card you drew. Only you see what it reveals.</p>
-      </div>
-
+      <p className="small" style={{ margin: 0 }}>
+        Draw the top card of your room's deck, then scan its QR code. Only you will see what it reveals.
+      </p>
       <Camera onCode={submit} />
-
       <form
-        className="stack"
         onSubmit={(e) => {
           e.preventDefault();
           submit(code);
         }}
       >
         <div className="field">
-          <label htmlFor="bk">No camera? Type the backup code</label>
+          <label htmlFor="bk">Or type the code under the QR</label>
           <div className="row">
             <input
               id="bk"
@@ -168,23 +161,11 @@ export default function Scan() {
               onChange={(e) => setCode(e.target.value.toUpperCase())}
             />
             <button className="btn primary" style={{ minWidth: 92 }} disabled={busy || code.trim().length < 3}>
-              Scan
+              {busy ? '…' : 'OK'}
             </button>
           </div>
         </div>
       </form>
-
-      {result && (
-        <div id="scan-result" className="stack" style={{ scrollMarginTop: 120 }}>
-          <SectionTitle>{result.again ? 'Already in your clues' : 'New evidence'}</SectionTitle>
-          <EvidenceCard item={result.item} note={result.effect} />
-          {result.item.kind !== 'bonus' && <p className="small muted center">Keep the card face down in front of you.</p>}
-        </div>
-      )}
-
-      <p className="small muted center" style={{ marginTop: 8 }}>
-        {count} evidence card{count === 1 ? '' : 's'} scanned. Bonus cards don't need scanning (Spare Battery codes add your token here).
-      </p>
     </div>
   );
 }

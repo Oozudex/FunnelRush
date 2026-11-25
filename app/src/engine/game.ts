@@ -42,6 +42,8 @@ export class Game {
   winnerId: string | null = null;
   usedBonus = new Set<string>();
   lastAccusation: GameState['lastAccusation'] = null;
+  /** The ONE action of the current turn (rules V2): search, recharge or accuse. */
+  action: GameState['action'] = null;
   touched = Date.now();
   logId = 0;
 
@@ -126,6 +128,7 @@ export class Game {
     this.round = 1;
     for (const p of this.players.values()) p.tokens = this.def.startTokens;
     this.phase = 'playing';
+    this.action = null;
     this.addLog('info', `The investigation begins. ${this.current().name} plays first.`);
   }
 
@@ -141,6 +144,7 @@ export class Game {
   }
 
   private advance() {
+    this.action = null;
     this.turn += 1;
     if (this.turn >= this.order.length) this.finishRound();
     else this.addLog('turn', `${this.current().name}'s turn.`);
@@ -154,6 +158,7 @@ export class Game {
 
   private finishRound() {
     const done = this.round;
+    this.action = null;
     this.turn = 0;
     this.round += 1;
     if (done % this.def.updateEvery === 0) {
@@ -168,13 +173,27 @@ export class Game {
   }
 
   // ---------------------------------------------------------------- actions
+  private myTurn(p: Player, what: string) {
+    this.requirePlaying();
+    if (this.current().id !== p.id) throw new GameError(`Wait for your turn to ${what}. ${this.current().name} is playing.`);
+  }
+
+  private takeAction(kind: NonNullable<GameState['action']>) {
+    if (this.action) {
+      const done = { search: 'searched a room', recharge: 'recharged', accuse: 'accused' }[this.action];
+      throw new GameError(`You already ${done} this turn: only ONE action per turn. Tap "End my turn".`);
+    }
+    this.action = kind;
+  }
+
   scan(playerId: string, raw: string): ScanResult {
-    if (this.phase === 'lobby') throw new GameError('The game has not started yet.');
     const p = this.player(playerId);
+    this.myTurn(p, 'search a room');
     const code = normalizeCode(raw);
     const card = this.def.cards[code];
     if (!card) throw new GameError(`Unknown code "${raw.trim().slice(0, 20)}". Check the code printed under the QR.`);
     const existing = p.evidence.find((e) => e.code === code);
+    if (!existing) this.takeAction('search');
     if (card.type === 'bonus') {
       let effect: string | undefined;
       if (card.bonus === 'token') {
@@ -215,7 +234,7 @@ export class Game {
   query(playerId: string, conds: Condition[]): QueryRecord {
     this.requirePlaying();
     const p = this.player(playerId);
-    if (this.current().id !== p.id) throw new GameError('You can only query during your turn.');
+    this.myTurn(p, 'run a query');
     if (p.tokens < 1) throw new GameError('No Query Token left. Recharge in the Server Room.');
     if (!Array.isArray(conds) || conds.length < 1 || conds.length > 2) throw new GameError('Use 1 or 2 conditions.');
     const unlocked = this.unlockedAttrs(p);
@@ -245,19 +264,19 @@ export class Game {
   }
 
   recharge(playerId: string) {
-    this.requirePlaying();
     const p = this.player(playerId);
-    if (this.current().id !== p.id) throw new GameError('You can only recharge during your turn.');
+    this.myTurn(p, 'recharge');
+    this.takeAction('recharge');
     p.tokens = this.def.maxTokens;
     this.addLog('recharge', `${p.name} recharged in the Server Room.`);
   }
 
   accuse(playerId: string, suspectId: string): boolean {
-    this.requirePlaying();
     const p = this.player(playerId);
-    if (this.current().id !== p.id) throw new GameError('You can only accuse during your turn, in the Library.');
+    this.myTurn(p, 'accuse');
     const s = this.def.suspects.find((x) => x.id === suspectId);
     if (!s) throw new GameError('Unknown suspect.');
+    this.takeAction('accuse');
     const correct = s.id === this.def.killerId;
     this.lastAccusation = { playerId: p.id, suspectName: s.name, correct, at: Date.now() };
     if (correct) {
@@ -306,6 +325,7 @@ export class Game {
       log: this.log.slice(-40),
       winnerId: this.winnerId,
       lastAccusation: this.lastAccusation,
+      action: this.action,
       solution:
         this.phase === 'over'
           ? {
@@ -341,7 +361,7 @@ export class Game {
       players: [...this.players.values()].map(({ sockets, ...p }) => p),
       order: this.order, firstPlayerId: this.firstPlayerId, turn: this.turn, round: this.round,
       updates: this.updates, log: this.log, winnerId: this.winnerId, usedBonus: [...this.usedBonus],
-      lastAccusation: this.lastAccusation, touched: this.touched, logId: this.logId,
+      lastAccusation: this.lastAccusation, action: this.action, touched: this.touched, logId: this.logId,
     };
   }
 
@@ -350,7 +370,7 @@ export class Game {
     Object.assign(g, {
       phase: d.phase, hostId: d.hostId, order: d.order, firstPlayerId: d.firstPlayerId, turn: d.turn, round: d.round,
       updates: d.updates, log: d.log, winnerId: d.winnerId, usedBonus: new Set(d.usedBonus),
-      lastAccusation: d.lastAccusation, touched: d.touched, logId: d.logId,
+      lastAccusation: d.lastAccusation, action: d.action ?? null, touched: d.touched, logId: d.logId,
     });
     for (const p of d.players) g.players.set(p.id, { ...p, sockets: new Set() });
     return g;

@@ -1,19 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { buzz, persist, store } from '../socket';
 import { clockFor, Glitch, Icon, PawnIcon, Tokens, useGame, useMe } from '../ui';
-import Scan from './Scan';
-import Query from './Query';
+import Play from './Play';
 import Clues from './Clues';
 import Notebook, { type NotebookState } from './Notebook';
 import Manor from './Manor';
 
-type Tab = 'scan' | 'query' | 'clues' | 'notebook' | 'manor';
+type Tab = 'play' | 'clues' | 'notebook' | 'manor';
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'scan', label: 'Scan' },
-  { id: 'query', label: 'Query' },
+  { id: 'play', label: 'Play' },
   { id: 'clues', label: 'Clues' },
   { id: 'notebook', label: 'Suspects' },
-  { id: 'manor', label: 'Manor' },
+  { id: 'manor', label: 'Game' },
 ];
 
 export default function GameScreen() {
@@ -21,7 +19,8 @@ export default function GameScreen() {
   const { game } = view;
   const { me, current, myTurn } = useMe(view);
   const key = `tlq.${game.code}.${me.id}`;
-  const [tab, setTabRaw] = useState<Tab>(store(`${key}.tab`, 'scan'));
+  const saved = store<string>(`${key}.tab`, 'play');
+  const [tab, setTabRaw] = useState<Tab>(TABS.some((t) => t.id === saved) ? (saved as Tab) : 'play');
   const setTab = (t: Tab) => {
     setTabRaw(t);
     persist(`${key}.tab`, t);
@@ -60,6 +59,7 @@ export default function GameScreen() {
   useEffect(() => {
     if (myTurn && !wasMyTurn.current) {
       buzz([60, 40, 60]);
+      setTab('play');
       toast("It's your turn, detective!", true);
     }
     wasMyTurn.current = myTurn;
@@ -83,13 +83,12 @@ export default function GameScreen() {
         </div>
         <div className={`turnbar ${myTurn ? 'mine' : ''}`}>
           {current && <span className="pawnbg"><PawnIcon pawn={current.pawn} /></span>}
-          <span className="grow">{myTurn ? 'Your turn: move, then act' : `${current?.name ?? '…'}'s turn`}</span>
+          <span className="grow">{myTurn ? 'Your turn!' : `${current?.name ?? '…'} is playing`}</span>
         </div>
       </header>
 
       <main className="screen">
-        {tab === 'scan' && <Scan />}
-        {tab === 'query' && <Query crossed={nb.crossed} />}
+        {tab === 'play' && <Play crossed={nb.crossed} goTo={setTab} />}
         {tab === 'clues' && <Clues />}
         {tab === 'notebook' && <Notebook nb={nb} setNb={updateNb} />}
         {tab === 'manor' && <Manor />}
