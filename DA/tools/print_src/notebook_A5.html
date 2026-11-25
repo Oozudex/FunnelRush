@@ -1,0 +1,65 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>The Last Query - detective notebook A5</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,600;0,800;1,400&family=Bungee&family=IBM+Plex+Mono:wght@400;700&family=Silkscreen&display=block" rel="stylesheet">
+<style>@page { size: 174mm 236mm; margin: 0; }
+html, body { width: 174mm; }
+.sheet { position: relative; width: 174mm; height: 236mm; overflow: hidden; page-break-after: always; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { font-family: 'Archivo', sans-serif; color: #F4F0E6; }
+.disp { font-family: 'Bungee', sans-serif; font-weight: 400; letter-spacing: .02em; }
+.mono { font-family: 'IBM Plex Mono', monospace; }
+.pix { font-family: 'Silkscreen', monospace; letter-spacing: .04em; }
+.mark { position: absolute; background: #000; }
+svg.i { display: inline-block; vertical-align: middle; fill: none; stroke: currentColor;
+        stroke-width: 2; stroke-linecap: square; stroke-linejoin: miter; }
+
+    .bleed { position:absolute; left:10mm; top:10mm; width:154mm; height:216mm; background:#EFE8D8; }
+    .trim { position:absolute; left:13mm; top:13mm; width:148mm; height:210mm; padding:8.5mm 9mm 8mm 11mm; color:#0B0B0C; }
+    .margin { position:absolute; left:19mm; top:10mm; height:216mm; width:.3mm; background:#E31B3B; opacity:.5; }
+    .hd { display:flex; justify-content:space-between; align-items:flex-end; border-bottom:.6mm solid #0B0B0C; padding-bottom:1.5mm; }
+    .hd h1 { font-family:Bungee; font-weight:400; font-size:14pt; line-height:1; }
+    .hd .pix { font-size:6pt; color:#E31B3B; text-align:right; }
+    .fields { display:flex; gap:4mm; margin:2.6mm 0 3mm; font:600 8pt Archivo; }
+    .fields span { flex:1; border-bottom:.3mm solid #0B0B0C; padding-bottom:2.6mm; }
+    table { width:100%; border-collapse:collapse; font:400 7.4pt Archivo; }
+    th { font-family:Silkscreen; font-weight:400; font-size:5.2pt; background:#0B0B0C; color:#F4F0E6; padding:1.3mm .4mm; letter-spacing:.02em; }
+    td { border:.25mm solid #0B0B0C; height:8.2mm; }
+    td.n { font-weight:600; padding-left:1.4mm; width:37mm; font-size:7.2pt; line-height:1.1; }
+    td.x { width:6mm; background:#E6DCC4; }
+    th.x { background:#E31B3B; }
+    h2 { font-family:Silkscreen; font-weight:400; font-size:7pt; color:#E31B3B; margin:3.6mm 0 1.4mm; letter-spacing:.05em; }
+    .help { font:400 7.4pt/1.35 Archivo; }
+    .gold { border-left:1mm solid #E31B3B; padding:.6mm 0 .6mm 2.4mm; font:italic 400 8pt/1.35 Archivo; margin-top:1.6mm; }
+    .clues td { height:8.2mm; }
+    .clues td.s { width:15mm; text-align:center; }
+    .clues td.s i { display:inline-block; width:3mm; height:3mm; border:.3mm solid #0B0B0C; margin:0 .4mm; }
+    .acc { border:.5mm solid #0B0B0C; padding:2.4mm 3mm; background:#F8F4EA; font:400 9pt/2 Archivo; }
+    .acc u { display:inline-block; border-bottom:.3mm solid #0B0B0C; text-decoration:none; }
+    .say { font:italic 400 7.8pt/1.35 Archivo; margin:1.2mm 0; padding-left:2.4mm; border-left:.8mm solid #E31B3B; }
+    .code { font:400 7pt/1.45 'IBM Plex Mono'; background:#0B0B0C; color:#F4F0E6; padding:1.8mm 2.4mm; margin-top:1.4mm; }
+    .code b { color:#E31B3B; }
+    .ft { position:absolute; left:11mm; right:9mm; bottom:5mm; display:flex; justify-content:space-between; font-family:Silkscreen; font-size:5.4pt; color:#6B665C; }
+    </style></head><body><div class="sheet" style="width:174mm;height:236mm"><div class="bleed"></div><div class="margin"></div><div class="trim">
+      <div class="hd"><h1>Detective<br>Notebook</h1><span class="pix">CONFIDENTIAL<br>QUERY DIVISION</span></div>
+      <div class="fields"><span>Detective:</span><span>Case:</span></div>
+      <table><tr><th style="text-align:left;padding-left:1.4mm">SUSPECT</th><th>AGE</th><th>HEIGHT</th><th>SHOE</th><th>HAND</th><th>HAIR</th><th>GLASSES</th><th>SMELL</th><th class="x">&#10007;</th></tr><tr><td class='n'>Lady Margaret Ravenscroft</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class='x'></td></tr><tr><td class='n'>Dr. Felix Moreau</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class='x'></td></tr><tr><td class='n'>Ivy Ravenscroft</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class='x'></td></tr><tr><td class='n'>Colonel Bram Hartley</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class='x'></td></tr><tr><td class='n'>Sofia Delacroix</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class='x'></td></tr><tr><td class='n'>Gideon Pike</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class='x'></td></tr><tr><td class='n'>Oscar Lindqvist</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class='x'></td></tr><tr><td class='n'>Nora Quill</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class='x'></td></tr><tr><td class='n'>Hugo Ravenscroft</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class='x'></td></tr><tr><td class='n'>Clara Finch</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class='x'></td></tr><tr><td class='n'>Father Thomas Reilly</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class='x'></td></tr><tr><td class='n'>Dante Russo</td><td></td><td></td><td></td><td></td><td></td><td></td><td></td><td class='x'></td></tr></table>
+      <h2>&gt; HOW TO USE IT</h2>
+      <div class="help">After each query, tick <b>&#10003;</b> the suspects who match a trait, cross out <b>&#10007;</b> the ones who don&#8217;t.
+      The last suspect standing is your killer. 1 query = 1 <svg viewBox="0 0 24 24" style="width:3.4mm;height:3.4mm;vertical-align:-.7mm"><circle cx="12" cy="12" r="11" fill="#0B0B0C"/><path d="M10 4h4v4h-4z M10 12h4v4l-2 4h-2.6l1.6-4h-1z" fill="#E31B3B"/></svg>.</div>
+      <div class="gold">&#8220;Find the same clue <b>twice</b>, and it&#8217;s probably true.&#8221; &#183; &#8220;<b style="color:#E31B3B">0 suspects found?</b> One of your clues is fake!&#8221;</div>
+      <h2>&gt; W.A.T.S.O.N. UPDATES (TRUE TRAITS OF THE KILLER)</h2>
+      <div style="display:flex;gap:2.5mm"><div style='flex:1;border:.3mm solid #0B0B0C;padding:1.4mm 2mm;font:600 7.4pt Archivo;height:10mm;background:#F8F4EA'><span style='font-family:Silkscreen;font-size:5.6pt;color:#E31B3B'>ROUND 4</span><br>+1 <svg viewBox="0 0 24 24" style="width:3.4mm;height:3.4mm;vertical-align:-.7mm"><circle cx="12" cy="12" r="11" fill="#0B0B0C"/><path d="M10 4h4v4h-4z M10 12h4v4l-2 4h-2.6l1.6-4h-1z" fill="#E31B3B"/></svg></div><div style='flex:1;border:.3mm solid #0B0B0C;padding:1.4mm 2mm;font:600 7.4pt Archivo;height:10mm;background:#F8F4EA'><span style='font-family:Silkscreen;font-size:5.6pt;color:#E31B3B'>ROUND 8</span><br>+1 <svg viewBox="0 0 24 24" style="width:3.4mm;height:3.4mm;vertical-align:-.7mm"><circle cx="12" cy="12" r="11" fill="#0B0B0C"/><path d="M10 4h4v4h-4z M10 12h4v4l-2 4h-2.6l1.6-4h-1z" fill="#E31B3B"/></svg></div><div style='flex:1;border:.3mm solid #0B0B0C;padding:1.4mm 2mm;font:600 7.4pt Archivo;height:10mm;background:#F8F4EA'><span style='font-family:Silkscreen;font-size:5.6pt;color:#E31B3B'>ROUND 12</span><br>+1 <svg viewBox="0 0 24 24" style="width:3.4mm;height:3.4mm;vertical-align:-.7mm"><circle cx="12" cy="12" r="11" fill="#0B0B0C"/><path d="M10 4h4v4h-4z M10 12h4v4l-2 4h-2.6l1.6-4h-1z" fill="#E31B3B"/></svg></div></div>
+      <div class="ft"><span>THE LAST QUERY</span><span>SIDE 1 / 2</span></div></div><div class="mark" style="left:12.875mm;top:2.5mm;width:.25mm;height:6mm"></div><div class="mark" style="left:12.875mm;top:227.5mm;width:.25mm;height:6mm"></div><div class="mark" style="left:160.875mm;top:2.5mm;width:.25mm;height:6mm"></div><div class="mark" style="left:160.875mm;top:227.5mm;width:.25mm;height:6mm"></div><div class="mark" style="top:12.875mm;left:2.5mm;height:.25mm;width:6mm"></div><div class="mark" style="top:12.875mm;left:165.5mm;height:.25mm;width:6mm"></div><div class="mark" style="top:222.875mm;left:2.5mm;height:.25mm;width:6mm"></div><div class="mark" style="top:222.875mm;left:165.5mm;height:.25mm;width:6mm"></div></div><div class="sheet" style="width:174mm;height:236mm"><div class="bleed"></div><div class="margin"></div><div class="trim">
+      <div class="hd"><h1>My Clues</h1><span class="pix">SEEN TWICE?<br>PROBABLY TRUE</span></div>
+      <table class="clues" style="margin-top:3mm"><tr><th style="text-align:left;padding-left:1.4mm">OBJECT</th><th>ROOM</th><th>WHAT IT REVEALS</th><th>SEEN</th></tr><tr><td></td><td></td><td></td><td class='s'><i></i><i></i><i></i></td></tr><tr><td></td><td></td><td></td><td class='s'><i></i><i></i><i></i></td></tr><tr><td></td><td></td><td></td><td class='s'><i></i><i></i><i></i></td></tr><tr><td></td><td></td><td></td><td class='s'><i></i><i></i><i></i></td></tr><tr><td></td><td></td><td></td><td class='s'><i></i><i></i><i></i></td></tr><tr><td></td><td></td><td></td><td class='s'><i></i><i></i><i></i></td></tr><tr><td></td><td></td><td></td><td class='s'><i></i><i></i><i></i></td></tr><tr><td></td><td></td><td></td><td class='s'><i></i><i></i><i></i></td></tr><tr><td></td><td></td><td></td><td class='s'><i></i><i></i><i></i></td></tr></table>
+      <h2>&gt; MY ACCUSATION (IN THE LIBRARY)</h2>
+      <div class="acc">&#8220;The killer is <u style="width:42mm"></u>:<br><u style="width:9mm"></u> years old, <u style="width:10mm"></u> m tall,
+      size <u style="width:8mm"></u> shoes, <u style="width:14mm"></u>-handed!&#8221;</div>
+      <h2>&gt; TABLE TALK</h2>
+      <div class="say">&#8220;I found a muddy footprint in the Greenhouse.&#8221;</div>
+      <div class="say">&#8220;Size 44 again! That&#8217;s the second time.&#8221;</div>
+      <div class="say">&#8220;Zero suspects found&#8230; one of my clues must be fake.&#8221;</div>
+      <div class="code">FIND guests WHERE shoe size <b>is</b> 44 <b>AND</b> height <b>between</b> 1.85 and 1.90<br>
+      <span style="color:#8C877D">&#8594; SELECT name FROM guests WHERE shoe = 44 AND height BETWEEN 1.85 AND 1.90;</span></div>
+      <div class="ft"><span>THE LAST QUERY</span><span>SIDE 2 / 2</span></div></div><div class="mark" style="left:12.875mm;top:2.5mm;width:.25mm;height:6mm"></div><div class="mark" style="left:12.875mm;top:227.5mm;width:.25mm;height:6mm"></div><div class="mark" style="left:160.875mm;top:2.5mm;width:.25mm;height:6mm"></div><div class="mark" style="left:160.875mm;top:227.5mm;width:.25mm;height:6mm"></div><div class="mark" style="top:12.875mm;left:2.5mm;height:.25mm;width:6mm"></div><div class="mark" style="top:12.875mm;left:165.5mm;height:.25mm;width:6mm"></div><div class="mark" style="top:222.875mm;left:2.5mm;height:.25mm;width:6mm"></div><div class="mark" style="top:222.875mm;left:165.5mm;height:.25mm;width:6mm"></div></div></body></html>

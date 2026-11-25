@@ -1,0 +1,22 @@
+<!doctype html>
+<html><head><meta charset="utf-8"><title>The Last Query - logo A4 print</title>
+<style>
+/* A4 landscape trim 297x210 mm + 3 mm bleed + 10 mm slug for crop marks */
+@page { size: 323mm 236mm; margin: 0; }
+html,body { margin:0; padding:0; width:323mm; height:236mm; background:#fff; }
+.bleed { position:absolute; left:10mm; top:10mm; width:303mm; height:216mm; background:#0B0B0C; }
+/* safe area = trim minus 5 mm on each side */
+.logo { position:absolute; left:28mm; top:28mm; width:267mm; height:180mm;
+        display:flex; align-items:center; justify-content:center; }
+.logo img { width:250mm; }
+.m { position:absolute; background:#000; }
+.h { height:0.25mm; width:8mm; } .v { width:0.25mm; height:8mm; }
+</style></head><body>
+<div class="bleed"></div>
+<div class="logo"><img src="../logo/the-last-query_logo_dark.svg"></div>
+<!-- crop marks at the trim lines (13 mm / 310 mm, 13 mm / 223 mm), kept outside the bleed -->
+<div class="m h" style="left:1mm;top:13mm"></div><div class="m v" style="left:13mm;top:1mm"></div>
+<div class="m h" style="left:314mm;top:13mm"></div><div class="m v" style="left:310mm;top:1mm"></div>
+<div class="m h" style="left:1mm;top:223mm"></div><div class="m v" style="left:13mm;top:227mm"></div>
+<div class="m h" style="left:314mm;top:223mm"></div><div class="m v" style="left:310mm;top:227mm"></div>
+</body></html>

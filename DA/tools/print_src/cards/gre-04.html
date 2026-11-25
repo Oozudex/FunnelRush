@@ -1,0 +1,129 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>card</title>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,400;0,600;0,800;1,400&family=Bungee&family=IBM+Plex+Mono:wght@400;700&family=Silkscreen&display=block" rel="stylesheet"><script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
+<style>@page { size: 69mm 94mm; margin: 0; }
+html, body { width: 69mm; }
+.sheet { position: relative; width: 69mm; height: 94mm; overflow: hidden; page-break-after: always; }
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { background: #fff; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { font-family: 'Archivo', sans-serif; color: #F4F0E6; }
+.disp { font-family: 'Bungee', sans-serif; font-weight: 400; letter-spacing: .02em; }
+.mono { font-family: 'IBM Plex Mono', monospace; }
+.pix { font-family: 'Silkscreen', monospace; letter-spacing: .04em; }
+.mark { position: absolute; background: #000; }
+svg.i { display: inline-block; vertical-align: middle; fill: none; stroke: currentColor;
+        stroke-width: 2; stroke-linecap: square; stroke-linejoin: miter; }
+
+.card { position:relative; width:69mm; height:94mm; background:#0B0B0C; overflow:hidden; color:#F4F0E6; }
+.card .fr { position:absolute; inset:0; }
+.card .in { position:absolute; left:8mm; top:8mm; width:53mm; height:78mm; display:flex; flex-direction:column; }
+.hd { display:flex; justify-content:space-between; align-items:center; height:6mm; padding:0 1.6mm; background:var(--c); color:var(--t); }
+.hd .pix { font-size:6pt; display:flex; align-items:center; gap:1mm; }
+.hd .mono { font-size:6pt; font-weight:700; }
+.mn { flex:1; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:1.5mm; }
+.ttl { font-family:'Bungee'; font-size:12pt; line-height:1.05; }
+.term { width:100%; border:.4mm solid #F4F0E6; background:#232327; padding:2.5mm 2mm; text-align:left; }
+.term .bar { font-family:'Silkscreen'; font-size:4.6pt; color:#8C877D; margin-bottom:1.5mm; }
+.term .kw { font-family:'IBM Plex Mono'; font-weight:700; font-size:20pt; line-height:1; white-space:nowrap; }
+.term .kw .p { color:#E31B3B; }
+.term .kw .cur { display:inline-block; width:3.2mm; height:5.5mm; background:#E31B3B; vertical-align:-.3mm; margin-left:1mm; }
+.lbl { font-family:'Silkscreen'; font-size:5.5pt; color:#8C877D; }
+.bd { font-size:7.5pt; line-height:1.3; text-align:center; padding:0 .5mm; }
+.ex { font-family:'IBM Plex Mono'; font-size:6.4pt; background:#232327; padding:1.2mm 1.5mm; margin-top:1.5mm; text-align:center; }
+.cols { display:flex; width:100%; border:.4mm solid #F4F0E6; }
+.cols span { flex:1; font-family:'IBM Plex Mono'; font-size:6pt; font-weight:700; padding:1.2mm .5mm; text-align:center; }
+.cols span + span { border-left:.4mm solid #F4F0E6; }
+.rows { width:100%; }
+.rows i { display:block; height:2.2mm; margin-top:1mm; background:#232327; }
+.rows i.hit { background:#E31B3B; }
+.big { font-family:'Bungee'; font-size:40pt; line-height:.9; }
+.ft { display:flex; align-items:flex-end; gap:2.5mm; margin-top:2mm; min-height:15mm; }
+.qr { width:15mm; height:15mm; flex:none; }
+.qr svg { width:100%; height:100%; display:block; }
+.ft .meta { display:flex; flex-direction:column; gap:.8mm; flex:1; }
+.ft .code { font-family:'IBM Plex Mono'; font-weight:700; font-size:9pt; }
+.ft .deck { font-family:'Silkscreen'; font-size:5pt; color:#8C877D; display:flex; gap:1mm; align-items:center; }
+.ft.noqr { min-height:9mm; justify-content:space-between; align-items:center; border-top:.3mm solid #232327; padding-top:1.5mm; }
+/* backs */
+.back .in { align-items:center; justify-content:center; gap:4mm; }
+.back img { width:47mm; }
+.back .rib { background:#E31B3B; color:#F4F0E6; font-family:'Bungee'; font-size:9pt; padding:1.4mm 4mm; display:flex; gap:1.5mm; align-items:center; }
+.back .hint { font-family:'Silkscreen'; font-size:5pt; color:#8C877D; }
+/* detective */
+.mono-badge { width:24mm; height:24mm; display:flex; align-items:center; justify-content:center; font-family:'Bungee'; font-size:20pt;
+  background:#F4F0E6; color:#0B0B0C; clip-path:polygon(30% 0,70% 0,100% 30%,100% 70%,70% 100%,30% 100%,0 70%,0 30%); }
+.role { font-family:'Silkscreen'; font-size:6pt; color:#E31B3B; }
+.quote { font-size:7pt; font-style:italic; color:#8C877D; }
+.power { border:.4mm solid #E31B3B; padding:2mm; font-size:7.5pt; line-height:1.3; text-align:left; width:100%; }
+.power b { font-family:'Bungee'; font-weight:400; color:#E31B3B; font-size:8pt; display:block; margin-bottom:.8mm; }
+
+/* ---------- square corners everywhere */
+.card .fr { position:absolute; inset:0; }
+.ic-blue { color:#5B7C99; } .ic-amber { color:#F2A93B; } .ic-red { color:#E31B3B; }
+.medal { display:flex; align-items:center; justify-content:center; }
+/* ---------- CASE FILE (paper dossier) */
+.t-dossier { background:#EFE8D8; color:#0B0B0C; }
+.t-dossier .margin { position:absolute; left:6.4mm; top:0; bottom:0; width:.3mm; background:#E31B3B; opacity:.55; }
+.t-dossier .hd { background:#0B0B0C; color:#F4F0E6; border-left:3.2mm solid var(--c); }
+.t-dossier .lbl, .t-dossier .ft .deck, .t-dossier .quote { color:#6B665C; }
+.t-dossier .ttl { color:#0B0B0C; }
+.t-dossier .term { background:#F8F4EA; border:.4mm dashed #0B0B0C; }
+.t-dossier .term .bar { color:#6B665C; }
+.t-dossier .ex { background:#E2D9C5; }
+.t-dossier .cols { border-color:#0B0B0C; } .t-dossier .cols span + span { border-color:#0B0B0C; }
+.t-dossier .rows i { background:#D9CFBA; } .t-dossier .rows i.hit { background:#E31B3B; }
+.t-dossier .ic-amber { color:#B8741A; } .t-dossier .ic-blue { color:#3E5F7D; }
+.t-dossier .ft.noqr { border-top:.3mm dashed #0B0B0C; }
+.t-dossier .power { background:#F8F4EA; }
+.t-dossier .mono-badge { background:#0B0B0C; color:#F4F0E6; }
+.t-dossier .qr svg rect { fill:#fff; }
+.stamp { position:absolute; right:7mm; top:18mm; transform:rotate(-11deg); border:.6mm solid #E31B3B;
+  color:#E31B3B; font-family:'Bungee'; font-size:6.5pt; padding:.5mm 1.5mm; letter-spacing:.08em; opacity:.8; z-index:2; }
+.clip { position:absolute; left:11mm; top:4mm; width:5mm; height:13mm; }
+.t-dossier.back { background:#C9A46E; }
+.t-dossier.back .tab { position:absolute; left:9mm; top:6mm; width:26mm; height:6mm; background:#D8B77F;
+  font-family:'Silkscreen'; font-size:5.5pt; color:#5A4325; display:flex; align-items:center; justify-content:center; }
+.t-dossier.back .label { background:#F8F4EA; border:.3mm solid #5A4325; padding:1.6mm 3mm; font-family:'IBM Plex Mono'; font-weight:700;
+  font-size:8.5pt; color:#0B0B0C; display:flex; gap:1.5mm; align-items:center; }
+.t-dossier.back .bigstamp { border:.8mm solid #E31B3B; color:#E31B3B; font-family:'Bungee'; font-size:11pt; padding:1mm 3mm;
+  transform:rotate(-8deg); opacity:.85; letter-spacing:.06em; }
+.t-dossier.back .hint { color:#5A4325; }
+/* ---------- ART DECO (noir + brass) */
+.t-deco .hd { background:none; color:#C9923A; border-top:.35mm solid #C9923A; border-bottom:.35mm solid #C9923A; }
+.t-deco .hd .pix svg { color:var(--c); }
+.t-deco .ttl { letter-spacing:.06em; }
+.t-deco .lbl { color:#C9923A; }
+.t-deco .medal { width:23mm; height:23mm; border-radius:50%; border:.45mm solid #C9923A; box-shadow:0 0 0 1mm #0B0B0C, 0 0 0 1.25mm #C9923A; }
+.t-deco .term { border-color:#C9923A; background:#141416; }
+.t-deco .term .kw .p { color:#C9923A; }
+.t-deco .ex { background:#161618; border-top:.3mm solid #C9923A; }
+.t-deco .cols, .t-deco .cols span + span { border-color:#C9923A; }
+.t-deco .rows i { background:#1C1C1F; }
+.t-deco .power { border-color:#C9923A; } .t-deco .power b { color:#C9923A; }
+.t-deco .mono-badge { background:#C9923A; }
+.t-deco .role { color:#C9923A; }
+.t-deco .ft.noqr { border-top:.3mm solid #C9923A; }
+.t-deco .ft .code { color:#C9923A; }
+.t-deco.back .cart { border:.4mm solid #C9923A; outline:.25mm solid #C9923A; outline-offset:.8mm; padding:1.4mm 4mm; color:#F4F0E6;
+  font-family:'Bungee'; font-size:9pt; display:flex; gap:1.5mm; align-items:center; background:#0B0B0C; }
+.t-deco.back .hint { color:#C9923A; }
+
+.photo { background:#FFFDF6; padding:1.8mm 1.8mm 5.5mm; box-shadow:.3mm .6mm 0 rgba(0,0,0,.25); transform:rotate(-2.2deg); position:relative; }
+.photo .ph { background:#17171A; width:33mm; height:27mm; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+.photo .cap { position:absolute; left:0; right:0; bottom:1.2mm; text-align:center; font-family:'IBM Plex Mono'; font-size:5pt; color:#6B665C; }
+.photo .tape { position:absolute; top:-2mm; left:50%; width:12mm; height:4mm; margin-left:-6mm; background:#E8DDBF; opacity:.85; transform:rotate(3deg); }
+.found { font-family:Silkscreen; font-size:5.8pt; color:#6B665C; display:flex; align-items:center; gap:1mm; justify-content:center; }
+.obj { font-family:Bungee; font-size:11pt; line-height:1.05; text-align:center; color:#0B0B0C; }
+.hint2 { font-size:7.5pt; line-height:1.3; text-align:center; color:#0B0B0C; }
+.effect { font-family:Bungee; font-size:12pt; color:#E31B3B; text-align:center; line-height:1; }
+</style></head><body><div class="sheet" style="width:69mm;height:94mm"><div class="card t-dossier"><svg class="fr" viewBox="0 0 69 94"><rect x="5.2" y="5.2" width="58.6" height="83.6" fill="none" stroke="#1B1B1D" stroke-width=".3"/><rect x="6.0" y="6.0" width="57.0" height="82.0" fill="none" stroke="#1B1B1D" stroke-width=".15"/></svg><div class="margin"></div><svg class="clip" viewBox="0 0 10 26"><path d="M3 6V20a3 3 0 0 0 6 0V4a4 4 0 0 0-8 0v15" fill="none" stroke="#8C877D" stroke-width="1.1" stroke-linecap="round"/></svg><div class="stamp">EVIDENCE</div><div class="in"><div class="hd" style="--c:#5B7C99;--t:#F4F0E6"><span class="pix"><svg class="i" viewBox="0 0 24 24" style="width:3.6mm;height:3.6mm;stroke-width:2.4;"><path d="M3 10a7 7 0 1 0 14 0a7 7 0 1 0-14 0 M15 15l6 6"/></svg> EVIDENCE</span><span class="mono">GRE-04</span></div><div class="mn" style="gap:1.8mm"><div class="photo"><div class="tape"></div><div class="ph"><svg viewBox="0 0 48 48" style="width:25mm;height:25mm;display:block"><path d="M24 44V24" fill="none" stroke="#7A5240" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /><rect x="13" y="9" width="22" height="15" rx="1.5" fill="#E9E1CC" stroke="none" stroke-width="0" /><circle cx="16.5" cy="12.5" r="1" fill="#232327" stroke="none" stroke-width="0" /><line x1="18" y1="15.5" x2="31" y2="15.5" stroke="#232327" stroke-width="0.9" stroke-linecap="round"/><line x1="18" y1="18.5" x2="31" y2="18.5" stroke="#232327" stroke-width="0.9" stroke-linecap="round"/><line x1="18" y1="21.5" x2="26.450000000000003" y2="21.5" stroke="#232327" stroke-width="0.9" stroke-linecap="round"/><path d="M24 32c-6-1-9-5-8-9c4 0 8 3 8 9zM24 34c5-1 8-4 7-8c-4 0-7 3-7 8z" fill="#4A7556" stroke="none" stroke-width="0" stroke-linecap="round" stroke-linejoin="round" /></svg></div><div class="cap">EXHIBIT GRE-04</div></div><div class="obj">Plant label</div><div class="found"><svg class="i" viewBox="0 0 24 24" style="width:2.8mm;height:2.8mm;stroke-width:2.6;"><path d="M5 19C5 9 11 4 20 4c0 9-5 15-15 15z M5 19l9-9"/></svg> FOUND IN THE GREENHOUSE</div><div class="hint2">Scan it to see what it reveals.<br>Keep it face down.</div></div><div class="ft"><div class="qr" data-code="GRE-04"></div><div class="meta"><span class="lbl">SCAN IN THE POLICE CONSOLE</span><span class="code">GRE-04</span><span class="deck"><svg class="i" viewBox="0 0 24 24" style="width:2.6mm;height:2.6mm;stroke-width:2.6;"><path d="M5 19C5 9 11 4 20 4c0 9-5 15-15 15z M5 19l9-9"/></svg> DECK: GREENHOUSE</span></div></div></div></div></div><script>
+document.querySelectorAll('.qr').forEach(function(el){
+  var q = qrcode(0, 'M'); q.addData('TLQ:' + el.dataset.code); q.make();
+  var n = q.getModuleCount(), s = '';
+  for (var r = 0; r < n; r++) for (var c = 0; c < n; c++)
+    if (q.isDark(r, c)) s += 'M' + c + ',' + r + 'h1v1h-1z';
+  el.innerHTML = '<svg viewBox="-2 -2 ' + (n + 4) + ' ' + (n + 4) + '" shape-rendering="crispEdges">'
+    + '<rect x="-2" y="-2" width="' + (n + 4) + '" height="' + (n + 4) + '" fill="#F4F0E6"/>'
+    + '<path d="' + s + '" fill="#0B0B0C"/></svg>';
+});
+</script></body></html>

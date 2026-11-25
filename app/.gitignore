@@ -1,0 +1,4 @@
+node_modules
+dist
+.games.json
+.games.json.tmp

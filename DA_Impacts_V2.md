@@ -1,0 +1,15 @@
+# Impacts de la V2 sur le design (`DA/`)
+
+Référence : `Data_Detective_Game_Design.md` (V2, validée le 2026-11-25).
+**Aucun fichier de `DA/` n'a encore été modifié.** Cette liste sert de brief pour la session DA.
+
+| Élément | Fichiers | Ce qui change | Ampleur |
+|---|---|---|---|
+| **Logo, palette, typo** | `DA/logo/`, `DA/palette-typo/` | Rien. Le `;` rouge du logo devient en plus le symbole des jetons. | ✅ aucun |
+| **Plateau** | `DA/board/`, `tools/build_board.py` | La **Salle des serveurs** passe en bas à droite et **échange sa place avec la Cave à vin**. Retirer les **trappes / passages secrets**. Plaques des pièces : retirer les pouvoirs, sauf *Recharge* (Server Room) et *Accuse here* (Library). Barre latérale : retirer le **cadran d'horloge** et la *coffee bank* ; mettre le nouveau tour (Move → Search / Recharge / Accuse + Query `;`), les 2 règles d'or, et un compteur de manches pour les mises à jour W.A.T.S.O.N. (4 / 8 / 12, « +1 `;` for everyone »). **7 pioches** au total : **pas de zone de pioche** dans le Grand Hall ni dans la Salle des serveurs, qui affiche seulement « RECHARGE: refill to 3 `;` ». Le décor peut rester : thé, empreintes « SIZE 44? », digitale. | 🟠 moyen |
+| **Cartes** | `DA/cards/`, `tools/build_print.py` | Le jeu de 64 cartes est remplacé par **40 cartes** : 34 cartes objet à scanner (nom de l'objet + pièce + illustration + QR, sans révéler l'indice) et 6 bonus imprimés (Spare Battery ×3, Running Shoes ×2, Master Key ×1). Supprimer les cartes Keyword, Table, Coffee, Twist et les 4 cartes Détective. Les 7 dos par pièce existants restent (pas de dos Server Room). Le style « Case File » est conservé. Liste complète des cartes : game design §8. | 🔴 gros |
+| **Jetons** | `DA/tokens/`, `tools/build_tokens.py` | Les 30 jetons café deviennent **16 Query Tokens `;`** (point-virgule rouge sur fond noir). Supprimer les jetons SUSPENDED et horloge. Les 4 pions restent, mais sans couleur liée à un pouvoir (ou garder les couleurs juste pour distinguer les joueurs). | 🟠 moyen |
+| **Carnet du détective** | `DA/tokens/…notebook…` | Nouvelle grille : **12 suspects** en lignes × colonnes *age, height, shoe, hand, hair, glasses, smell* + une colonne ✗. Ajouter une zone « My clues (seen twice?) » et, au dos, les phrases utiles en anglais avec le modèle d'accusation. | 🟠 moyen |
+| **Livret de règles** | `DA/rules/`, `tools/build_rules.py` | À réécrire : beaucoup plus court (8 pages A5 probablement). Supprimer console SQL à débloquer, café, horloge, orage, pouvoirs et accusation Suspect+Arme+Mobile. Ajouter les règles d'or, l'exemple de requête-phrase avec le SQL et le profil d'accusation. Il reste toujours « A GAME BY TEAM ____ » à remplir. | 🔴 gros |
+| **Suspects** | (nouveau) | **4 nouveaux personnages** : Hugo Ravenscroft, Clara Finch, Father Thomas Reilly, Dante Russo. Si des portraits sont prévus, il en faut 12 (carnet, app). | 🟡 petit/moyen |
+| **App** | (pas encore commencée) | Pas impactée : elle sera construite directement sur la V2. | — |
