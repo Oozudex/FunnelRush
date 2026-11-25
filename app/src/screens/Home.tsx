@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { Session } from '../../shared/types';
 import { createGame, joinGame, persist, store } from '../socket';
-import { Logo } from '../ui';
+import { Bar, Icon, Logo } from '../ui';
 
 export default function Home({ onSession, toast }: { onSession: (s: Session) => void; toast: (m: string) => void }) {
   const initialCode = new URLSearchParams(window.location.search).get('join') ?? '';
@@ -14,8 +14,7 @@ export default function Home({ onSession, toast }: { onSession: (s: Session) => 
     setBusy(true);
     persist('tlq.name', name.trim());
     try {
-      const s =
-        mode === 'create' ? await createGame(name) : await joinGame(code, name);
+      const s = mode === 'create' ? await createGame(name) : await joinGame(code, name);
       onSession(s);
     } catch (e) {
       toast((e as Error).message);
@@ -25,41 +24,36 @@ export default function Home({ onSession, toast }: { onSession: (s: Session) => 
   };
 
   return (
-    <div className="screen no-nav">
-      <div style={{ marginTop: 18 }}>
+    <div className="screen no-nav stack" style={{ gap: 22 }}>
+      <div style={{ paddingTop: 20 }}>
         <Logo />
       </div>
-      <p className="home-tag pix">Police Console · W.A.T.S.O.N. terminal</p>
 
       {mode === 'menu' && (
-        <div className="stack">
-          <div className="panel flat small">
-            <p className="mono" style={{ margin: 0 }}>
-              <span className="red">&gt;</span> Ravenscroft Manor, 11:45 PM. Sir Victor is dead. The storm has cut the bridge.
-              The killer is still in the house.
+        <>
+          <div className="file margin">
+            <Bar icon={Icon.console}>Police Console</Bar>
+            <p className="typed" style={{ fontSize: 17 }}>
+              Ravenscroft Manor, 11:45 PM. Sir Victor is dead. The storm has cut the bridge. The killer is still in the house.
             </p>
           </div>
-          <button className="btn primary big block" onClick={() => setMode('create')}>
-            Create a game
-          </button>
-          <button className="btn big block" onClick={() => setMode('join')}>
-            Join a game
-          </button>
-          <p className="small muted center" style={{ marginTop: 8 }}>
-            One phone per detective. The host creates the game, the others scan the QR code or type the game code.
-          </p>
-        </div>
+          <div className="stack">
+            <button className="btn primary big block" onClick={() => setMode('create')}>Create a game</button>
+            <button className="btn big block" onClick={() => setMode('join')}>Join a game</button>
+          </div>
+          <p className="small muted center">One phone per detective. The host creates the game, the others scan its QR code.</p>
+        </>
       )}
 
       {mode !== 'menu' && (
         <form
-          className="stack"
+          className="file stack"
           onSubmit={(e) => {
             e.preventDefault();
             if (!busy) go();
           }}
         >
-          <div className="h2">{mode === 'create' ? 'New investigation' : 'Join the investigation'}</div>
+          <Bar icon={mode === 'create' ? Icon.console : Icon.scan}>{mode === 'create' ? 'New investigation' : 'Join the investigation'}</Bar>
           {mode === 'join' && (
             <div className="field">
               <label htmlFor="code">Game code</label>
@@ -84,15 +78,14 @@ export default function Home({ onSession, toast }: { onSession: (s: Session) => 
               value={name}
               maxLength={18}
               autoComplete="nickname"
+              autoFocus={mode === 'create' || !!code}
               onChange={(e) => setName(e.target.value)}
             />
           </div>
           <button className="btn primary big block" disabled={busy || name.trim().length < 2 || (mode === 'join' && code.trim().length < 4)}>
-            {busy ? (mode === 'create' ? 'Opening the line…' : 'Calling the host…') : mode === 'create' ? 'Create & get a code' : 'Join'}
+            {busy ? (mode === 'create' ? 'Opening the line…' : 'Calling the host…') : mode === 'create' ? 'Create the game' : 'Join'}
           </button>
-          <button type="button" className="btn ghost block" onClick={() => setMode('menu')}>
-            Back
-          </button>
+          <button type="button" className="btn ghost block" onClick={() => setMode('menu')}>Back</button>
         </form>
       )}
     </div>

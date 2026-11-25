@@ -3,33 +3,31 @@ import jsQR from 'jsqr';
 import type { EvidenceItem, ScanResult } from '../../shared/types';
 import { describe } from '../../shared/sql';
 import { buzz, emit } from '../socket';
-import { useGame } from '../ui';
+import { Bar, Icon, roomIcon, useGame } from '../ui';
 
 export function EvidenceCard({ item, note }: { item: EvidenceItem; note?: string }) {
   const { view } = useGame();
   const attr = item.condition && view.game.caseInfo.attributes.find((a) => a.key === item.condition!.attr);
-  const label = item.kind === 'bonus' ? 'BONUS' : 'EVIDENCE';
+  const bonus = item.kind === 'bonus';
   return (
-    <div className="panel paper">
-      <div className={`ev-head ${item.kind}`}>
-        <span className="pix">{label}</span>
-        <span className="mono" style={{ fontWeight: 700 }}>{item.code}</span>
-      </div>
-      <div style={{ paddingLeft: 14 }}>
-        <div className="ev-obj">{item.object}</div>
-        <div className="ev-room">Found in the {item.room}</div>
-        <p className="ev-text">{item.text}</p>
-        {item.kind === 'trait' && attr && (
-          <>
-            <div className="stamp">CLUE: {describe(attr, item.condition!).toUpperCase()}</div>
-            <p className="small" style={{ marginTop: 10 }}>
-              🔓 <b>{attr.label}</b> is unlocked in the Police Console.
-            </p>
-          </>
-        )}
-        {item.kind === 'deadend' && <div className="stamp" style={{ color: '#6b665c', borderColor: '#6b665c' }}>DEAD END</div>}
-        {note && <p className="small" style={{ marginTop: 10, fontWeight: 700 }}>{note}</p>}
-      </div>
+    <div className="file margin evcard">
+      <Bar icon={bonus ? Icon.bolt : Icon.clues} color={bonus ? 'amber' : 'blue'} end={<span className="code">{item.code}</span>}>
+        {bonus ? 'Bonus' : 'Evidence'}
+      </Bar>
+      <div className="obj">{item.object}</div>
+      <div className="where label">{roomIcon(item.room)} Found in the {item.room}</div>
+      <p className="text">{item.text}</p>
+      {item.kind === 'trait' && attr && (
+        <>
+          <span className="stamp">Clue: {describe(attr, item.condition!)}</span>
+          <p className="foot row" style={{ gap: 8 }}>
+            <span style={{ width: 18, flex: 'none' }}>{Icon.lock}</span>
+            <span><b>{attr.column}</b> is now unlocked in the Police Console.</span>
+          </p>
+        </>
+      )}
+      {item.kind === 'deadend' && <span className="stamp grey">Dead end</span>}
+      {note && <p className="foot"><b>{note}</b></p>}
     </div>
   );
 }
@@ -102,14 +100,13 @@ function Camera({ onCode }: { onCode: (code: string) => void }) {
             <div className="laser" />
           </>
         ) : (
-          <div className="center" style={{ padding: 20 }}>
-            <div className="pix muted" style={{ marginBottom: 12 }}>QR scanner</div>
-            <button className="btn primary big" onClick={start}>Open camera</button>
-          </div>
+          <button className="btn big" onClick={start} style={{ boxShadow: 'none', borderColor: 'var(--sheet)' }}>
+            {Icon.scan} Open the camera
+          </button>
         )}
       </div>
       {on && <button className="btn ghost block" onClick={stop}>Stop camera</button>}
-      {err && <p className="small amber">{err}</p>}
+      {err && <p className="small red">{err}</p>}
     </div>
   );
 }
@@ -137,8 +134,8 @@ export function ScanPanel({ onResult }: { onResult: (r: ScanResult) => void }) {
 
   return (
     <div className="stack">
-      <p className="small" style={{ margin: 0 }}>
-        Draw the top card of your room's deck, then scan its QR code. Only you will see what it reveals.
+      <p className="small">
+        Draw the top card of your room's deck and scan its QR code. Only you see what it reveals.
       </p>
       <Camera onCode={submit} />
       <form
@@ -148,7 +145,7 @@ export function ScanPanel({ onResult }: { onResult: (r: ScanResult) => void }) {
         }}
       >
         <div className="field">
-          <label htmlFor="bk">Or type the code under the QR</label>
+          <label htmlFor="bk">No camera? Type the code under the QR</label>
           <div className="row">
             <input
               id="bk"
@@ -160,7 +157,7 @@ export function ScanPanel({ onResult }: { onResult: (r: ScanResult) => void }) {
               autoComplete="off"
               onChange={(e) => setCode(e.target.value.toUpperCase())}
             />
-            <button className="btn primary" style={{ minWidth: 92 }} disabled={busy || code.trim().length < 3}>
+            <button className="btn primary flat" style={{ minWidth: 80 }} disabled={busy || code.trim().length < 3}>
               {busy ? '…' : 'OK'}
             </button>
           </div>

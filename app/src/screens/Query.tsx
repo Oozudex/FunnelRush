@@ -1,40 +1,37 @@
-import { useMemo, useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import type { AttributeDef, Condition, QueryRecord } from '../../shared/types';
 import { describe, fmtValue } from '../../shared/sql';
 import { buzz, emit } from '../socket';
-import { Glitch, Tokens, useGame, useMe } from '../ui';
+import { Bar, Icon, Sheet, Tokens, useGame, useMe } from '../ui';
 
 export function ResultTable({ rec, crossed, suspects }: { rec: QueryRecord; crossed: string[]; suspects: { id: string; name: string; link: string }[] }) {
   if (rec.names.length === 0)
     return (
-      <div className="zero panel alert">
-        <div className="h2"><Glitch text="0 SUSPECTS FOUND" hard /></div>
-        <p className="mono" style={{ marginTop: 10 }}>Nobody matches all your conditions.</p>
-        <p className="small muted" style={{ margin: 0 }}>Golden rule: one of your clues is fake!</p>
+      <div className="file center stack tight">
+        <div style={{ padding: '6px 0' }}><span className="stamp big">0 suspects</span></div>
+        <p className="typed">Nobody matches all your conditions.</p>
+        <p className="small red"><b>Golden rule: one of your clues is fake!</b></p>
       </div>
     );
   return (
-    <div className="panel flat" style={{ padding: 0 }}>
-      <table className="result-table">
+    <div className="file flush">
+      <Bar icon={Icon.suspects} end={<span>{rec.names.length} found</span>}>Result · only you see it</Bar>
+      <table className="result">
         <thead>
-          <tr><th>#</th><th>name</th><th>link to Victor</th></tr>
+          <tr><th>name</th><th>link to Victor</th></tr>
         </thead>
         <tbody>
-          {rec.names.map((n, i) => {
+          {rec.names.map((n) => {
             const s = suspects.find((x) => x.name === n);
             return (
               <tr key={n} className={s && crossed.includes(s.id) ? 'crossed' : ''}>
-                <td className="muted">{i + 1}</td>
-                <td style={{ fontWeight: 700 }}>{n}</td>
+                <td style={{ fontWeight: 800 }}>{n}</td>
                 <td className="small muted">{s?.link}</td>
               </tr>
             );
           })}
         </tbody>
       </table>
-      <div className="pix muted" style={{ padding: '8px 10px', fontSize: 11 }}>
-        {rec.names.length} suspect{rec.names.length > 1 ? 's' : ''} found · only you see this
-      </div>
     </div>
   );
 }
@@ -170,141 +167,152 @@ export default function PoliceConsole({ crossed, onClose }: { crossed: string[];
   };
 
   const valueOptions = curA && (state === 'VAL' || state === 'VAL2') ? curA.options : [];
+  const hint = state === 'NEXT' && conds.length >= MAX_CONDS ? 'Ready! Run your query (2 conditions max).' : HINT[state];
+
+  // the contextual blocks: only what makes sense at this point of the sentence
+  let palette: React.ReactNode = null;
+  let paletteLabel = '';
+  if (state === 'FIELD') {
+    paletteLabel = 'Column to show';
+    palette = <button className="blk" onClick={() => add({ k: 'field', v: 'name' })}>name</button>;
+  } else if (state === 'TABLE') {
+    paletteLabel = 'Table';
+    palette = <button className="blk" onClick={() => add({ k: 'table', v: caseInfo.table })}>{caseInfo.table}</button>;
+  } else if (state === 'COL') {
+    paletteLabel = 'Columns';
+    palette = attrs.map((a) => {
+      const open = unlocked.has(a.key);
+      return (
+        <button
+          key={a.key}
+          className={`blk ${open ? '' : 'locked'}`}
+          disabled={!open}
+          title={open ? a.label : 'Locked: find a clue about it first'}
+          onClick={() => add({ k: 'col', v: a.key })}
+        >
+          {a.column}
+          <small>{open ? a.label : 'locked'}</small>
+        </button>
+      );
+    });
+  } else if (state === 'OP') {
+    paletteLabel = 'Compare';
+    palette = (['=', '<>', '>', '<'] as SqlOp[])
+      .filter((o) => !(curA?.type === 'enum' && (o === '>' || o === '<')))
+      .map((o) => (
+        <button key={o} className="blk" onClick={() => add({ k: 'op', v: o })}>
+          {o}
+          <small>{OP_WORD[o]}</small>
+        </button>
+      ));
+  } else if (state === 'VAL' || state === 'VAL2') {
+    paletteLabel = `Values · ${curA?.label ?? ''}${curA?.unit ? ` (${curA.unit})` : ''}`;
+    palette = valueOptions.map((v) => (
+      <button key={String(v)} className="blk" onClick={() => add({ k: 'val', v, label: curA?.type === 'number' ? fmtValue(curA, v) : `'${v}'` })}>
+        {curA?.type === 'number' ? fmtValue(curA, v) : `'${v}'`}
+      </button>
+    ));
+  }
 
   return (
-    <div className="sheet full" role="dialog" aria-modal="true" aria-label="Police Console">
-      <div className="inner stack">
+    <Sheet title="Police Console" icon={Icon.console} onClose={onClose} full>
+      <div className="stack">
         <div className="row spread">
-          <div>
-            <div className="h2">Police Console</div>
-            <div className="small muted">Write your SQL query</div>
-          </div>
-          <button className="btn ghost small" onClick={onClose} aria-label="Close">✕ Close</button>
-        </div>
-        <div className="row spread panel flat" style={{ padding: '8px 12px' }}>
-          <span className="small">1 query = 1 token</span>
+          <span className="small muted">1 query = 1 token</span>
           <Tokens n={me.tokens} max={caseInfo.maxTokens} />
         </div>
 
         {/* reminder of the clues: the player copies them into the query */}
-        <details className="panel flat" style={{ padding: 12 }} open={clues.length > 0 && toks.length === 0}>
-          <summary style={{ cursor: 'pointer', fontWeight: 800 }}>My clues ({clues.length})</summary>
-          <div className="small" style={{ marginTop: 8 }}>
-            {clues.length === 0 && <span className="amber">No clue yet: search a room first.</span>}
-            {clues.map(({ c, confirmed, n }) => (
-              <div key={JSON.stringify(c)} className="mono" style={{ padding: '3px 0' }}>
-                • {describe(attrs.find((a) => a.key === c.attr), c)}{' '}
-                <span className="muted">{confirmed ? '✔ confirmed' : n > 1 ? `×${n}` : ''}</span>
-              </div>
-            ))}
-          </div>
-        </details>
+        <div className="stack tight">
+          <div className="label">My clues</div>
+          {clues.length === 0 ? (
+            <p className="small red">No clue yet: search a room first.</p>
+          ) : (
+            <div className="clue-chips">
+              {clues.map(({ c, confirmed, n }) => (
+                <span key={JSON.stringify(c)} className={`clue-chip ${confirmed ? 'ok' : ''}`}>
+                  {describe(attrs.find((a) => a.key === c.attr), c)}
+                  {confirmed ? ' ✓' : n > 1 ? ` ×${n}` : ''}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* the query being written */}
-        <div className="sqlline" aria-live="polite">
-          {toks.map((t, i) => (
-            <span key={i} className={`stok ${t.k}`}>{tokText(t, attrs)}</span>
-          ))}
-          {complete && <span className="stok kw">;</span>}
-          {!complete && <span className="caret" />}
+        <div>
+          <div className="sql" aria-live="polite">
+            <span className="prompt">&gt;</span>
+            {toks.map((t, i) => (
+              <span key={i} className={t.k === 'kw' ? 'kw' : t.k === 'col' ? 'col' : t.k === 'table' ? 'table' : t.k === 'val' ? 'val' : ''}>
+                {tokText(t, attrs)}
+              </span>
+            ))}
+            {complete ? <span className="kw">;</span> : <span className="caret" />}
+          </div>
+          <div className="row" style={{ gap: 0, justifyContent: 'flex-end' }}>
+            <button className="btn ghost small" disabled={!toks.length} onClick={() => { setLast(null); setToks((l) => l.slice(0, -1)); }}>Undo</button>
+            <button className="btn ghost small" disabled={!toks.length} onClick={() => { setLast(null); setToks([]); }}>Clear</button>
+          </div>
         </div>
-        <div className="row" style={{ gap: 8 }}>
-          <button className="btn ghost small grow" disabled={!toks.length} onClick={() => { setLast(null); setToks((l) => l.slice(0, -1)); }}>⌫ Undo</button>
-          <button className="btn ghost small grow" disabled={!toks.length} onClick={() => { setLast(null); setToks([]); }}>Clear</button>
-        </div>
-        <p className="hint">💡 {state === 'NEXT' && conds.length >= MAX_CONDS ? 'Ready! Run your query (2 conditions max).' : HINT[state]}</p>
 
-        {/* block keyboard */}
-        <div className="kbd">
-          <div className="kbd-row">
-            <span className="kbd-lbl">Keywords</span>
+        <p className="hint"><b>NEXT</b><span>{hint}</span></p>
+
+        <div className="stack tight">
+          <div className="label">Keywords</div>
+          <div className="blocks">
             {(['SELECT', 'FROM', 'WHERE', 'AND', 'BETWEEN'] as Kw[]).map((k) => (
               <button key={k} className="blk kw" disabled={!kwOk(k)} onClick={() => add({ k: 'kw', v: k })}>{k}</button>
             ))}
           </div>
-          <div className="kbd-row">
-            <span className="kbd-lbl">Show</span>
-            <button className="blk field" disabled={state !== 'FIELD'} onClick={() => add({ k: 'field', v: 'name' })}>name</button>
-            <span className="kbd-lbl">Table</span>
-            <button className="blk table" disabled={state !== 'TABLE'} onClick={() => add({ k: 'table', v: caseInfo.table })}>{caseInfo.table}</button>
-          </div>
-          <div className="kbd-row">
-            <span className="kbd-lbl">Columns</span>
-            {attrs.map((a) => {
-              const open = unlocked.has(a.key);
-              return (
-                <button
-                  key={a.key}
-                  className="blk col"
-                  disabled={state !== 'COL' || !open}
-                  title={open ? a.label : 'Locked: find a clue about it first'}
-                  onClick={() => add({ k: 'col', v: a.key })}
-                >
-                  {open ? '' : '🔒 '}{a.column}
-                </button>
-              );
-            })}
-          </div>
-          <div className="kbd-row">
-            <span className="kbd-lbl">Compare</span>
-            {(['=', '<>', '>', '<'] as SqlOp[]).map((o) => (
-              <button
-                key={o}
-                className="blk op"
-                disabled={state !== 'OP' || (curA?.type === 'enum' && (o === '>' || o === '<'))}
-                onClick={() => add({ k: 'op', v: o })}
-              >
-                {o} <small>{OP_WORD[o]}</small>
-              </button>
-            ))}
-          </div>
-          <div className="kbd-row">
-            <span className="kbd-lbl">Values</span>
-            {valueOptions.length === 0 && <span className="small muted">Pick a column and a comparison first.</span>}
-            {valueOptions.map((v) => (
-              <button key={String(v)} className="blk val" onClick={() => add({ k: 'val', v, label: curA?.type === 'number' ? fmtValue(curA, v) : `'${v}'` })}>
-                {curA?.type === 'number' ? fmtValue(curA, v) : `'${v}'`}
-              </button>
-            ))}
-          </div>
         </div>
-
-        {complete && (
-          <div className="panel flat small" style={{ padding: 12 }}>
-            In English: find the guests whose{' '}
-            <b>{conds.map((c) => describe(attrs.find((a) => a.key === c.attr), c).toLowerCase()).join(' and ')}</b>.
+        {palette && (
+          <div className="stack tight">
+            <div className="label">{paletteLabel}</div>
+            <div className="blocks">{palette}</div>
           </div>
         )}
-        <button className="btn primary big block" disabled={!complete || busy || me.tokens < 1} onClick={run}>
-          {busy ? 'Running…' : <>Run query · 1 <span style={{ fontSize: 24 }}>;</span></>}
+
+        {complete && (
+          <div className="note small">
+            <span className="label">In English</span>
+            <p style={{ marginTop: 4 }}>
+              Find the guests whose <b>{conds.map((c) => describe(attrs.find((a) => a.key === c.attr), c).toLowerCase()).join(' and ')}</b>.
+            </p>
+          </div>
+        )}
+        <button className="btn red big block" disabled={!complete || busy || me.tokens < 1} onClick={run}>
+          {busy ? 'Running…' : <>Run the query <span className="tok">;</span></>}
         </button>
-        {me.tokens < 1 && <p className="small amber center" style={{ margin: 0 }}>No token left: recharge in the Server Room or wait for the next W.A.T.S.O.N. update.</p>}
+        {me.tokens < 1 && <p className="small red center">No token left: recharge in the Server Room or wait for the next W.A.T.S.O.N. update.</p>}
 
         {last && (
-          <div id="q-result" className="stack" style={{ scrollMarginTop: 20 }}>
-            <div className="step-title"><span className="num">✓</span> Result</div>
-            <div className="sqlbox">{last.sql}</div>
+          <div id="q-result" className="stack" style={{ scrollMarginTop: 70 }}>
+            <div className="sql small">{last.sql}</div>
             <ResultTable rec={last} crossed={crossed} suspects={caseInfo.suspects} />
-            <p className="small muted" style={{ margin: 0 }}>Cross out the others in the Suspects tab.</p>
+            <p className="small muted">Cross out the others in the Suspects tab.</p>
           </div>
         )}
 
         {view.me.queries.length > 0 && (
-          <details className="panel flat" style={{ padding: 12 }}>
-            <summary style={{ cursor: 'pointer', fontWeight: 800 }}>My previous queries ({view.me.queries.length})</summary>
-            <div className="stack" style={{ gap: 8, marginTop: 10 }}>
+          <details className="file flush disclosure">
+            <summary>
+              <span className="grow">My previous queries ({view.me.queries.length})</span>
+              <span className="chev">{Icon.chevron}</span>
+            </summary>
+            <div className="in stack tight">
               {[...view.me.queries].reverse().map((q) => (
                 <div key={q.at} className="small">
                   <div className="mono">{q.sql}</div>
-                  <div className={q.names.length ? 'amber' : 'red'}>→ {q.names.length ? q.names.join(' · ') : '0 suspects found'}</div>
+                  <div className={q.names.length ? 'muted' : 'red'}>→ {q.names.length ? q.names.join(' · ') : '0 suspects found'}</div>
                 </div>
               ))}
             </div>
           </details>
         )}
 
-        <button className="btn ghost block" onClick={onClose}>Back to my turn</button>
+        <button className="btn block" onClick={onClose}>Back to my turn</button>
       </div>
-    </div>
+    </Sheet>
   );
 }

@@ -1,13 +1,41 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type ReactNode } from 'react';
 import type { ScanResult } from '../../shared/types';
 import { emit } from '../socket';
-import { Glitch, PawnIcon, Tokens, useGame, useMe } from '../ui';
+import { Bar, Icon, PawnIcon, RoomIcon, Tokens, useGame, useMe } from '../ui';
 import { EvidenceCard, ScanPanel } from './Scan';
 import PoliceConsole from './Query';
 
 type Panel = null | 'search' | 'recharge' | 'accuse';
 
-export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: 'clues' | 'notebook') => void }) {
+function Step({ n, title, sub, state, children }: { n: string; title: string; sub?: ReactNode; state?: 'done' | 'info'; children?: ReactNode }) {
+  return (
+    <div className={`step ${state === 'done' ? 'done' : state === 'info' ? 'muted-step' : ''}`}>
+      <span className="n">{state === 'done' ? <span style={{ width: 18, height: 18, display: 'block' }}>{Icon.check}</span> : n}</span>
+      <div className="head">
+        <div className="t">{title}</div>
+        {sub && <div className="small muted">{sub}</div>}
+      </div>
+      {children && <div className="body">{children}</div>}
+    </div>
+  );
+}
+
+function RoomTile({ room, icon, title, sub, main, onClick }: { room: string; icon: ReactNode; title: string; sub: string; main?: boolean; onClick: () => void }) {
+  return (
+    <button className={`room ${main ? 'main' : ''}`} onClick={onClick}>
+      <Bar icon={icon}>{room}</Bar>
+      <span className="in">
+        <span>
+          <span className="t" style={{ display: 'block' }}>{title}</span>
+          <span className="s">{sub}</span>
+        </span>
+        {Icon.arrow}
+      </span>
+    </button>
+  );
+}
+
+export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: 'clues' | 'suspects') => void }) {
   const { view, toast } = useGame();
   const { game } = view;
   const { me, myTurn, current } = useMe(view);
@@ -28,18 +56,14 @@ export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: '
   if (!myTurn) {
     return (
       <div className="stack">
-        <div className="panel center stack" style={{ padding: '26px 16px' }}>
+        <div className="file center stack" style={{ padding: '28px 16px' }}>
           <div style={{ display: 'flex', justifyContent: 'center' }}>{current && <PawnIcon pawn={current.pawn} />}</div>
-          <div className="h2">{current?.name ?? '…'} is playing</div>
-          <p className="muted" style={{ margin: 0 }}>Wait for your turn. Your phone will buzz.</p>
+          <div className="title t2">{current?.name ?? '…'} is playing</div>
+          <p className="typed muted">Wait for your turn. Your phone will buzz.</p>
         </div>
-        <div className="pix muted center" style={{ marginTop: 8 }}>Meanwhile</div>
-        <button className="btn big block" onClick={() => goTo('clues')}>🔎 Read my clues</button>
-        <button className="btn big block" onClick={() => goTo('notebook')}>✗ Cross out suspects</button>
-        <div className="row spread panel flat" style={{ padding: '8px 12px' }}>
-          <span className="small">My Query Tokens</span>
-          <Tokens n={me.tokens} max={game.caseInfo.maxTokens} />
-        </div>
+        <div className="label center" style={{ marginTop: 6 }}>Meanwhile</div>
+        <button className="btn big block" onClick={() => goTo('clues')}>{Icon.clues} Read my clues</button>
+        <button className="btn big block" onClick={() => goTo('suspects')}>{Icon.suspects} Cross out suspects</button>
       </div>
     );
   }
@@ -48,9 +72,11 @@ export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: '
   const done = game.action;
   const max = game.scansPerTurn;
   const canScanMore = done === 'search' && game.scans < max;
-  const doneText = done === 'search'
-    ? game.scans >= max ? `You scanned ${max} cards.` : `Card ${game.scans} of ${max} scanned. You can scan one more card.`
-    : done === 'recharge' ? 'You recharged your tokens.' : done === 'accuse' ? 'You accused.' : '';
+  const actionDone = !!done && !canScanMore;
+  const doneText =
+    done === 'search'
+      ? game.scans >= max ? `You scanned ${max} cards.` : `Card ${game.scans} of ${max} scanned. You can scan one more.`
+      : done === 'recharge' ? 'Tokens recharged.' : done === 'accuse' ? 'You accused.' : '';
 
   const endTurn = async () => {
     setBusy(true);
@@ -59,89 +85,76 @@ export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: '
   };
 
   return (
-    <div className="stack">
-      <div className="h2">Your turn, {me.name}</div>
+    <div className="stack" style={{ gap: 22 }}>
+      <div className="title t2">Your turn, {me.name}</div>
 
-      {/* ① MOVE */}
-      <div className="step">
-        <div className="step-title"><span className="num">1</span> Move your pawn</div>
-        <p className="small" style={{ margin: 0 }}>Up to 2 rooms on the board, or stay where you are.</p>
-      </div>
+      <Step n="1" title="Move your pawn" sub="Up to 2 rooms on the board, or stay." state="info" />
 
-      {/* ② ACT */}
-      <div className={`step ${done && !canScanMore ? 'ok' : 'now'}`}>
-        <div className="step-title"><span className="num">2</span> Do ONE action {done && !canScanMore && <span className="tag" style={{ marginLeft: 'auto', color: '#3ac06b' }}>✓ done</span>}</div>
-        {done ? (
-          <>
-            <p className="small" style={{ margin: 0 }}>{doneText}</p>
-            {canScanMore && panel !== 'search' && (
-              <button className="btn primary block action" style={{ marginTop: 10 }} onClick={() => setPanel('search')}>
-                <span>🔎 Scan a 2nd card</span><small>Draw the next card of the same room</small>
-              </button>
-            )}
-          </>
-        ) : panel === null ? (
-          <div className="stack" style={{ gap: 10 }}>
-            <button className="btn primary big block action" onClick={() => setPanel('search')}>
-              <span>🔎 Search the room</span><small>Draw up to {max} cards and scan them</small>
-            </button>
-            <button className="btn big block action" onClick={() => setPanel('recharge')}>
-              <span>⚡ Recharge</span><small>Only in the Server Room</small>
-            </button>
-            <button className="btn big block action" onClick={() => setPanel('accuse')}>
-              <span>⚖ Accuse the killer</span><small>Only in the Library</small>
-            </button>
-          </div>
-        ) : (
-          <button className="btn ghost small" onClick={() => setPanel(null)}>← Choose another action</button>
-        )}
-
-        {(!done || canScanMore) && panel === 'search' && (
-          <div style={{ marginTop: 12 }}>
-            <ScanPanel onResult={(r) => { setScans((l) => [r, ...l.filter((x) => x.item.code !== r.item.code)]); setPanel(null); }} />
+      <Step n="2" title="Do one action" sub={done ? doneText : 'Pick where your pawn is.'} state={actionDone ? 'done' : undefined}>
+        {!done && panel === null && (
+          <div className="rooms">
+            <RoomTile room="Any room with a deck" icon={Icon.scan} title="Search the room" sub={`Draw up to ${max} cards and scan them`} main onClick={() => setPanel('search')} />
+            <RoomTile room="Server Room" icon={RoomIcon['Server Room']} title="Recharge" sub={`Back to ${game.caseInfo.maxTokens} tokens`} onClick={() => setPanel('recharge')} />
+            <RoomTile room="Library" icon={RoomIcon.Library} title="Accuse the killer" sub="Name the killer and win" onClick={() => setPanel('accuse')} />
           </div>
         )}
-        {!done && panel === 'recharge' && (
-          <div className="stack" style={{ marginTop: 12 }}>
-            <p style={{ margin: 0 }}>Is your pawn in the <b>Server Room</b>? Your tokens go back to {game.caseInfo.maxTokens}.</p>
-            <button
-              className="btn amber big block"
-              disabled={busy}
-              onClick={async () => {
-                setBusy(true);
-                await emit('token:recharge').then(() => setPanel(null)).catch((e: Error) => toast(e.message));
-                setBusy(false);
-              }}
+
+        {canScanMore && panel !== 'search' && (
+          <button className="btn primary block" onClick={() => setPanel('search')}>{Icon.scan} Scan the next card</button>
+        )}
+
+        {panel !== null && (!done || (panel === 'search' && canScanMore)) && (
+          <div className="file stack">
+            <Bar
+              icon={panel === 'search' ? Icon.scan : panel === 'recharge' ? RoomIcon['Server Room'] : RoomIcon.Library}
+              color={panel === 'accuse' ? 'red' : undefined}
             >
-              Yes, recharge <Tokens n={game.caseInfo.maxTokens} max={game.caseInfo.maxTokens} />
-            </button>
+              {panel === 'search' ? 'Search the room' : panel === 'recharge' ? 'Server Room · recharge' : 'Library · accuse'}
+            </Bar>
+            {panel === 'search' && (
+              <ScanPanel
+                onResult={(r) => {
+                  setScans((l) => [r, ...l.filter((x) => x.item.code !== r.item.code)]);
+                  setPanel(null);
+                }}
+              />
+            )}
+            {panel === 'recharge' && (
+              <>
+                <p>Is your pawn in the <b>Server Room</b>? Your tokens go back to {game.caseInfo.maxTokens}.</p>
+                <button
+                  className="btn primary big block"
+                  disabled={busy}
+                  onClick={async () => {
+                    setBusy(true);
+                    await emit('token:recharge').then(() => setPanel(null)).catch((e: Error) => toast(e.message));
+                    setBusy(false);
+                  }}
+                >
+                  Recharge <Tokens n={game.caseInfo.maxTokens} max={game.caseInfo.maxTokens} />
+                </button>
+              </>
+            )}
+            {panel === 'accuse' && <Accuse onDone={() => setPanel(null)} />}
+            {!done && <button className="btn ghost block" onClick={() => setPanel(null)}>Choose another action</button>}
           </div>
         )}
-        {!done && panel === 'accuse' && <Accuse onDone={() => setPanel(null)} />}
-      </div>
 
-      {scans.length > 0 && (
-        <div className="stack">
-          {scans.map((sc) => (
-            <EvidenceCard key={sc.item.code} item={sc.item} note={sc.effect ?? (sc.again ? 'You had already scanned this card.' : undefined)} />
-          ))}
-          <p className="small muted center" style={{ margin: 0 }}>Keep your cards face down in front of you.</p>
-        </div>
-      )}
+        {scans.map((sc) => (
+          <EvidenceCard key={sc.item.code} item={sc.item} note={sc.effect ?? (sc.again ? 'You had already scanned this card.' : undefined)} />
+        ))}
+        {scans.length > 0 && <p className="small muted center">Keep your cards face down in front of you.</p>}
+      </Step>
 
-      {/* ③ QUERY */}
-      <div className="step">
-        <div className="step-title"><span className="num">3</span> Write a SQL query <span className="muted small" style={{ marginLeft: 6 }}>(optional)</span></div>
-        <p className="small" style={{ margin: '0 0 10px' }}>Build a query with your clues to find who matches. 1 query = 1 token.</p>
+      <Step n="3" title="Query W.A.T.S.O.N." sub="Optional. Write a SQL query with your clues. 1 query = 1 token.">
         <button className="btn block" onClick={() => setConsoleOpen(true)} disabled={me.tokens < 1}>
-          Open the Police Console <Tokens n={me.tokens} max={game.caseInfo.maxTokens} />
+          {Icon.console} Open the Police Console
         </button>
-        {me.tokens < 1 && <p className="small amber" style={{ margin: '8px 0 0' }}>No token: recharge in the Server Room.</p>}
-      </div>
+        {me.tokens < 1 && <p className="small red">No token left: recharge in the Server Room.</p>}
+      </Step>
 
-      {/* ④ END */}
-      <button className="btn primary big block" style={{ marginTop: 6 }} disabled={busy} onClick={endTurn}>
-        End my turn ➜
+      <button className="btn primary big block" disabled={busy} onClick={endTurn}>
+        End my turn {Icon.move}
       </button>
 
       {consoleOpen && <PoliceConsole crossed={crossed} onClose={() => setConsoleOpen(false)} />}
@@ -157,8 +170,8 @@ function Accuse({ onDone }: { onDone: () => void }) {
   const s = suspects.find((x) => x.id === pick);
 
   return (
-    <div className="stack" style={{ marginTop: 12 }}>
-      <p style={{ margin: 0 }}>Your pawn must be in the <b>Library</b>.</p>
+    <>
+      <p>Your pawn must be in the <b>Library</b>.</p>
       <div className="field">
         <label htmlFor="who">Who is the killer?</label>
         <select id="who" className="select" value={pick} onChange={(e) => setPick(e.target.value)}>
@@ -168,17 +181,15 @@ function Accuse({ onDone }: { onDone: () => void }) {
           ))}
         </select>
       </div>
-      <div className="panel paper">
-        <div style={{ paddingLeft: 14 }}>
-          <div className="ev-room">Say it out loud, in English:</div>
-          <p className="mono" style={{ margin: '6px 0 0', fontWeight: 700 }}>
-            “The killer is {s ? s.name : '________'}: __ years old, __ m tall, size __ shoes, ____-handed!”
-          </p>
-        </div>
+      <div className="note">
+        <div className="label">Say it out loud, in English</div>
+        <p className="typed" style={{ marginTop: 6, fontSize: 17 }}>
+          “The killer is {s ? s.name : '________'}: __ years old, __ m tall, size __ shoes, ____-handed!”
+        </p>
       </div>
-      <p className="small amber" style={{ margin: 0 }}>Wrong? Back to the Grand Hall and you lose all your tokens.</p>
+      <p className="small red">Wrong? Back to the Grand Hall and you lose all your tokens.</p>
       <button
-        className="btn primary big block"
+        className="btn red big block"
         disabled={!pick || busy}
         onClick={async () => {
           setBusy(true);
@@ -192,8 +203,8 @@ function Accuse({ onDone }: { onDone: () => void }) {
           }
         }}
       >
-        {s ? <Glitch text={`I accuse ${s.name.split(' ').slice(-1)[0]}!`} /> : 'I accuse…'}
+        {s ? `I accuse ${s.name.split(' ').slice(-1)[0]}!` : 'I accuse…'}
       </button>
-    </div>
+    </>
   );
 }

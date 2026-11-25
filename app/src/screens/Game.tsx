@@ -1,17 +1,16 @@
 import { useEffect, useRef, useState } from 'react';
 import { buzz, persist, store } from '../socket';
-import { clockFor, Glitch, Icon, PawnIcon, Tokens, useGame, useMe } from '../ui';
+import { Bar, clockFor, Icon, PawnIcon, Sheet, Tokens, useGame, useMe } from '../ui';
 import Play from './Play';
 import Clues from './Clues';
 import Notebook, { type NotebookState } from './Notebook';
 import Manor from './Manor';
 
-type Tab = 'play' | 'clues' | 'notebook' | 'manor';
+type Tab = 'turn' | 'clues' | 'suspects';
 const TABS: { id: Tab; label: string }[] = [
-  { id: 'play', label: 'Play' },
+  { id: 'turn', label: 'Turn' },
   { id: 'clues', label: 'Clues' },
-  { id: 'notebook', label: 'Suspects' },
-  { id: 'manor', label: 'Game' },
+  { id: 'suspects', label: 'Suspects' },
 ];
 
 export default function GameScreen() {
@@ -19,8 +18,9 @@ export default function GameScreen() {
   const { game } = view;
   const { me, current, myTurn } = useMe(view);
   const key = `tlq.${game.code}.${me.id}`;
-  const saved = store<string>(`${key}.tab`, 'play');
-  const [tab, setTabRaw] = useState<Tab>(TABS.some((t) => t.id === saved) ? (saved as Tab) : 'play');
+  const saved = store<string>(`${key}.tab`, 'turn');
+  const [tab, setTabRaw] = useState<Tab>(TABS.some((t) => t.id === saved) ? (saved as Tab) : 'turn');
+  const [menu, setMenu] = useState(false);
   const setTab = (t: Tab) => {
     setTabRaw(t);
     persist(`${key}.tab`, t);
@@ -45,7 +45,7 @@ export default function GameScreen() {
     persist(`${key}.seenUpd`, game.updates.length);
   };
 
-  // Accusation overlay
+  // Wrong accusation overlay
   const [seenAcc, setSeenAcc] = useState<number>(store(`${key}.seenAcc`, 0));
   const acc = game.lastAccusation && game.lastAccusation.at > seenAcc && !game.lastAccusation.correct ? game.lastAccusation : null;
   const closeAcc = () => {
@@ -59,13 +59,13 @@ export default function GameScreen() {
   useEffect(() => {
     if (myTurn && !wasMyTurn.current) {
       buzz([60, 40, 60]);
-      setTab('play');
+      setTab('turn');
+      setMenu(false);
       toast("It's your turn, detective!", true);
     }
     wasMyTurn.current = myTurn;
-  }, [myTurn, toast]);
+  }, [myTurn, toast]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const nextUpdate = Math.ceil(game.round / game.caseInfo.updateEvery) * game.caseInfo.updateEvery;
   const accuser = acc && game.players.find((p) => p.id === acc.playerId);
 
   return (
@@ -73,30 +73,30 @@ export default function GameScreen() {
       <header className="topbar">
         <div className="row spread">
           <div>
-            <div className="pix muted" style={{ fontSize: 10 }}>Round {game.round} · next update R{nextUpdate}</div>
+            <div className="meta muted">Round {game.round}</div>
             <div className="clock">{clockFor(game.round)}</div>
           </div>
-          <div className="row" style={{ gap: 8 }}>
-            <span className="pix muted" style={{ fontSize: 10 }}>Tokens</span>
+          <div className="row" style={{ gap: 6 }}>
             <Tokens n={me.tokens} max={game.caseInfo.maxTokens} />
+            <button className="iconbtn" onClick={() => setMenu(true)} aria-label="Game info and settings">{Icon.menu}</button>
           </div>
         </div>
-        <div className={`turnbar ${myTurn ? 'mine' : ''}`}>
-          {current && <span className="pawnbg"><PawnIcon pawn={current.pawn} /></span>}
-          <span className="grow">{myTurn ? 'Your turn!' : `${current?.name ?? '…'} is playing`}</span>
+        <div className={`turnstrip ${myTurn ? 'mine' : ''}`}>
+          <Bar icon={current ? <PawnIcon pawn={current.pawn} /> : null}>
+            {myTurn ? 'Your turn' : `${current?.name ?? '…'} is playing`}
+          </Bar>
         </div>
       </header>
 
       <main className="screen">
-        {tab === 'play' && <Play crossed={nb.crossed} goTo={setTab} />}
+        {tab === 'turn' && <Play crossed={nb.crossed} goTo={setTab} />}
         {tab === 'clues' && <Clues />}
-        {tab === 'notebook' && <Notebook nb={nb} setNb={updateNb} />}
-        {tab === 'manor' && <Manor />}
+        {tab === 'suspects' && <Notebook nb={nb} setNb={updateNb} />}
       </main>
 
       <nav className="nav" aria-label="Police Console">
         {TABS.map((t) => (
-          <button key={t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)} aria-current={tab === t.id}>
+          <button key={t.id} className={tab === t.id ? 'on' : ''} onClick={() => setTab(t.id)} aria-current={tab === t.id ? 'page' : undefined}>
             {Icon[t.id]}
             {t.label}
             {t.id === 'clues' && view.me.evidence.length > 0 && <span className="badge">{view.me.evidence.length}</span>}
@@ -104,19 +104,23 @@ export default function GameScreen() {
         ))}
       </nav>
 
+      {menu && (
+        <Sheet title="The game" icon={Icon.info} onClose={() => setMenu(false)}>
+          <Manor />
+        </Sheet>
+      )}
+
       {showUpdate && (
         <div className="overlay" role="dialog" aria-modal="true">
-          <div className="inner stack center">
-            <div className="pix amber">⚡ Lightning strike · end of round {showUpdate.round}</div>
-            <div className="h1"><Glitch text="W.A.T.S.O.N. UPDATE" hard /></div>
-            <div className="panel alert" style={{ textAlign: 'left' }}>
-              <div className="pix muted" style={{ marginBottom: 6 }}>Data restored · confirmed true</div>
-              <div className="mono" style={{ fontSize: 18, fontWeight: 700 }}>{showUpdate.text}</div>
+          <div className="file stack">
+            <Bar icon={Icon.bolt} color="amber" end={<span>Round {showUpdate.round}</span>}>W.A.T.S.O.N. update</Bar>
+            <div><span className="stamp">Data restored</span></div>
+            <p className="small muted">Lightning strike! One true trait of the killer:</p>
+            <p className="title t2">{showUpdate.text}</p>
+            <div className="row note">
+              <span className="tok">;</span>
+              <span className="small"><b>+1 Query Token for everyone</b> (max 3). Take one from the reserve.</span>
             </div>
-            <div className="h2">
-              <span className="tok">;</span> +1 token for everyone
-            </div>
-            <p className="small muted">Take 1 Query Token from the reserve (max 3).</p>
             <button className="btn primary big block" onClick={closeUpdate}>Got it</button>
           </div>
         </div>
@@ -124,18 +128,16 @@ export default function GameScreen() {
 
       {!showUpdate && acc && (
         <div className="overlay" role="dialog" aria-modal="true">
-          <div className="inner stack center">
-            <div className="pix muted">Accusation in the Library</div>
-            <div className="h1 red"><Glitch text="WRONG!" hard /></div>
+          <div className="file stack">
+            <Bar icon={Icon.scale} color="red">Accusation · Library</Bar>
+            <div className="center" style={{ padding: '6px 0' }}><span className="stamp big">Wrong!</span></div>
             {accuser?.id === me.id ? (
               <>
-                <p className="mono">{acc.suspectName} is innocent.</p>
-                <div className="panel" style={{ textAlign: 'left' }}>
-                  Move your pawn back to the <b>Grand Hall</b> and give back <b>all your tokens</b>. You stay in the game.
-                </div>
+                <p className="typed center" style={{ fontSize: 18 }}>{acc.suspectName} is innocent.</p>
+                <div className="note small">Move your pawn back to the <b>Grand Hall</b> and give back <b>all your tokens</b>. You stay in the game.</div>
               </>
             ) : (
-              <p className="mono">
+              <p className="typed center" style={{ fontSize: 17 }}>
                 {accuser?.name ?? 'A detective'} accused {acc.suspectName}… and was wrong. Cross that name out!
               </p>
             )}

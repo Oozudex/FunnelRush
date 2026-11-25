@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import type { Session, View } from '../shared/types';
 import { leave as netLeave, loadSession, resume, saveSession, setHandlers, wake } from './socket';
 import type { NetStatus } from './net/room';
-import { GameCtx } from './ui';
+import { GameCtx, Logo } from './ui';
 import Home from './screens/Home';
 import Lobby from './screens/Lobby';
 import GameScreen from './screens/Game';
@@ -101,7 +101,7 @@ export default function App() {
     <>
       {body}
       {view && status !== 'online' && view.game.phase !== 'over' && (
-        <div className="toast" style={{ top: 12, bottom: 'auto' }} role="status">
+        <div className="toast top" role="status">
           {status === 'host-away' ? "Waiting for the host's phone… (the host must keep the app open)" : 'Connection lost. Reconnecting…'}
         </div>
       )}
@@ -116,11 +116,14 @@ export default function App() {
 
 function Loading({ error, retry, forget }: { error: string; retry: () => void; forget: () => void }) {
   return (
-    <div className="screen no-nav center stack" style={{ paddingTop: '26vh' }}>
-      <div className="h2"><span className="glitch hard" data-text="RECONNECTING…">RECONNECTING…</span></div>
+    <div className="screen no-nav stack" style={{ paddingTop: '18vh' }}>
+      <Logo small />
+      <div className="center" style={{ margin: '12px 0' }}>
+        <span className="stamp">{error ? 'NO ANSWER' : 'RECONNECTING…'}</span>
+      </div>
       {error && (
         <>
-          <p className="amber">{error}</p>
+          <p className="typed center">{error}</p>
           <button className="btn primary big block" onClick={retry}>Try again</button>
           <button className="btn ghost block" onClick={forget}>Leave this game</button>
         </>
