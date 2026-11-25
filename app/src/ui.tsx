@@ -20,7 +20,7 @@ export function useMe(view: View) {
 }
 
 export function Logo({ small }: { small?: boolean }) {
-  return <img className="logo" src="/logo.svg" alt="The Last Query" style={small ? { maxWidth: 220 } : undefined} />;
+  return <img className="logo" src={`${import.meta.env.BASE_URL}logo.svg`} alt="The Last Query" style={small ? { maxWidth: 220 } : undefined} />;
 }
 
 export function Glitch({ text, hard, className = '' }: { text: string; hard?: boolean; className?: string }) {

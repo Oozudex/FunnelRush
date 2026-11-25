@@ -6,7 +6,8 @@ import { Logo, PAWN_NAME, PawnIcon, SectionTitle, useGame, useMe } from '../ui';
 
 /** URL other phones open. On localhost we swap in the computer's Wi-Fi IP so phones can reach it. */
 export function useJoinUrl(code: string) {
-  const [url, setUrl] = useState(`${window.location.origin}/?join=${code}`);
+  const base = `${window.location.origin}${window.location.pathname}`;
+  const [url, setUrl] = useState(`${base}?join=${code}`);
   useEffect(() => {
     const { hostname, protocol, port } = window.location;
     if (!['localhost', '127.0.0.1', '::1'].includes(hostname)) return;
@@ -14,7 +15,7 @@ export function useJoinUrl(code: string) {
       .then((r) => r.json())
       .then((info: { lanIps: string[] }) => {
         const ip = info.lanIps.find((i) => i.startsWith('192.168.')) ?? info.lanIps[0];
-        if (ip) setUrl(`${protocol}//${ip}${port ? `:${port}` : ''}/?join=${code}`);
+        if (ip) setUrl(`${protocol}//${ip}${port ? `:${port}` : ''}${window.location.pathname}?join=${code}`);
       })
       .catch(() => {});
   }, [code]);
@@ -32,7 +33,7 @@ export function JoinQr({ code }: { code: string }) {
       <div className="gamecode" aria-label="Game code">{code}</div>
       <div className="qrbox">{src && <img src={src} alt={`QR code to join ${code}`} />}</div>
       <p className="small muted" style={{ wordBreak: 'break-all' }}>
-        Scan with the phone camera, or go to <span className="mono">{url.replace(/\/\?join=.*/, '')}</span> and type the code.
+        Scan with the phone camera, or go to <span className="mono">{url.replace(/\/?\?join=.*/, '')}</span> and type the code.
       </p>
     </div>
   );

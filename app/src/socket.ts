@@ -1,7 +1,14 @@
 import { io } from 'socket.io-client';
 import type { Ack, Session } from '../shared/types';
 
-export const socket = io({ autoConnect: true, transports: ['websocket', 'polling'] });
+/**
+ * Server address. Empty = same origin (local dev, or Render serving everything).
+ * On GitHub Pages, public/config.js sets window.TLQ_SERVER to the Render URL.
+ */
+export const SERVER = String((window as unknown as { TLQ_SERVER?: string }).TLQ_SERVER || '').replace(/\/$/, '');
+export const socket = SERVER
+  ? io(SERVER, { autoConnect: true, transports: ['websocket', 'polling'] })
+  : io({ autoConnect: true, transports: ['websocket', 'polling'] });
 
 /** Emit with acknowledgement. Rejects with the server's English error message. */
 export function emit<T = unknown>(event: string, ...args: unknown[]): Promise<T> {

@@ -47,6 +47,15 @@ Tout est servi sur http://localhost:3001 (ou sur le port de la variable `PORT`).
 
 Le service gratuit s'endort après 15 minutes sans visite. Ouvre l'URL une minute avant la démo pour le réveiller. Les parties sont gardées en mémoire et dans `.games.json`, ce qui fait qu'un redémarrage ne coupe pas une partie en cours. En revanche, sur Render gratuit, ce fichier est effacé quand le service s'endort.
 
+### GitHub Pages (interface) + Render (serveur)
+
+GitHub Pages ne sert que des fichiers statiques. Il héberge donc l'**interface** (dossier `docs/` à la racine), qui se connecte au **serveur** Render.
+
+1. Déploie le serveur sur Render (étapes ci-dessus). Note son URL, par exemple `https://the-last-query.onrender.com`.
+2. Si l'URL est différente, modifie la ligne de `docs/config.js`. Tu peux aussi reconstruire : `TLQ_SERVER=https://ton-url.onrender.com npm run build:pages`.
+3. Sur GitHub : Settings → Pages → Source « Deploy from a branch », branche `main`, dossier `/docs`.
+4. Après chaque modification de l'app, lance `npm run build:pages` puis commit le dossier `docs/`.
+
 Autres options gratuites possibles : Railway, Fly.io, Koyeb (même build et même start). Vercel et Netlify ne conviennent pas, car Socket.IO a besoin d'un serveur qui tourne en continu.
 
 ## Ce que fait l'app (règles V2)

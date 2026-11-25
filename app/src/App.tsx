@@ -62,7 +62,7 @@ export default function App() {
   }, []);
 
   let body;
-  if (!view) body = resuming ? <Loading /> : <Home onSession={onSession} toast={toast} />;
+  if (!view) body = resuming ? <Loading /> : <Home onSession={onSession} toast={toast} connected={connected} />;
   else {
     const ctx = { view, toast, leave };
     body = (

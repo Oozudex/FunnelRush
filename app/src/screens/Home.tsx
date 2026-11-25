@@ -3,7 +3,7 @@ import type { Session } from '../../shared/types';
 import { emit, persist, store } from '../socket';
 import { Logo } from '../ui';
 
-export default function Home({ onSession, toast }: { onSession: (s: Session) => void; toast: (m: string) => void }) {
+export default function Home({ onSession, toast, connected }: { onSession: (s: Session) => void; toast: (m: string) => void; connected: boolean }) {
   const initialCode = new URLSearchParams(window.location.search).get('join') ?? '';
   const [mode, setMode] = useState<'menu' | 'create' | 'join'>(initialCode ? 'join' : 'menu');
   const [name, setName] = useState<string>(store('tlq.name', ''));
@@ -32,6 +32,11 @@ export default function Home({ onSession, toast }: { onSession: (s: Session) => 
         <Logo />
       </div>
       <p className="home-tag pix">Police Console · W.A.T.S.O.N. terminal</p>
+      {!connected && (
+        <p className="small amber center" role="status">
+          Waking up the W.A.T.S.O.N. server… (up to 1 minute the first time)
+        </p>
+      )}
 
       {mode === 'menu' && (
         <div className="stack">
