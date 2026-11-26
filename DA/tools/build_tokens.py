@@ -207,6 +207,55 @@ def tokens_glue_sheet():
     return _page("The Last Query - query tokens A4 glue", [_sheet(o)])
 
 
+def tokens_grid_sheet():
+    """Duplex A4, easy cut (playtest 1): the 20 tokens as 20 x 20 mm squares in a gapless 4 x 5 grid.
+    Straight cuts only (ruler or guillotine), along the crop marks. Same background on every tile,
+    so no bleed is needed between tiles; 3 mm bleed around the block. Page 2 = backs, mirrored."""
+    W, H, T, COLS, ROWS, BL = 210, 297, 20, 4, 5, 3.0
+    x0, y0 = (W - COLS * T) / 2, 62
+    bw, bh = COLS * T, ROWS * T
+
+    def marks():
+        o, L, g = [], 7, 2                                   # mark length, gap from the bleed
+        for k in range(COLS + 1):
+            x = x0 + k * T
+            o.append(f'<line x1="{x}" y1="{y0 - BL - g - L}" x2="{x}" y2="{y0 - BL - g}" stroke="{NOIR}" stroke-width=".2"/>')
+            o.append(f'<line x1="{x}" y1="{y0 + bh + BL + g}" x2="{x}" y2="{y0 + bh + BL + g + L}" stroke="{NOIR}" stroke-width=".2"/>')
+        for k in range(ROWS + 1):
+            y = y0 + k * T
+            o.append(f'<line x1="{x0 - BL - g - L}" y1="{y}" x2="{x0 - BL - g}" y2="{y}" stroke="{NOIR}" stroke-width=".2"/>')
+            o.append(f'<line x1="{x0 + bw + BL + g}" y1="{y}" x2="{x0 + bw + BL + g + L}" y2="{y}" stroke="{NOIR}" stroke-width=".2"/>')
+        return "".join(o)
+
+    def centres(mirror=False):
+        for r_ in range(ROWS):
+            for c_ in range(COLS):
+                cx, cy = x0 + c_ * T + T / 2, y0 + r_ * T + T / 2
+                yield (W - cx if mirror else cx), cy
+
+    k = .78 * 10 / 12
+    f = [text(W / 2, 22, "THE LAST QUERY &#183; 20 QUERY TOKENS &#183; SIDE 1 / 2", 5, NOIR, "Bungee"),
+         text(W / 2, 29, "Print BOTH pages double-sided, flip on the LONG edge, 100 % (actual size), on 250-350 g/m&#178; card.", 2.7, "#444", "Archivo"),
+         text(W / 2, 34, "Then cut straight along the marks: 5 vertical cuts + 6 horizontal cuts give 20 tokens of 20 x 20 mm.", 2.7, "#444", "Archivo"),
+         f'<rect x="{x0 - BL}" y="{y0 - BL}" width="{bw + 2 * BL}" height="{bh + 2 * BL}" fill="{NOIR}"/>']
+    for cx, cy in centres():
+        f.append(f'<circle cx="{cx}" cy="{cy}" r="8.6" fill="none" stroke="{RED}" stroke-width=".55"/>'
+                 f'<circle cx="{cx}" cy="{cy}" r="7.7" fill="none" stroke="{RED}" stroke-width=".2" stroke-dasharray=".8 .6"/>'
+                 f'<g transform="translate({cx - 12 * k},{cy - 12 * k - 1.3}) scale({k})"><path d="{SEMI}" fill="#7E0C1F" transform="translate(.9,.9)"/><path d="{SEMI}" fill="{RED}"/></g>'
+                 + text(cx, cy + 6.6, "QUERY", 1.6, BONE, "Silkscreen"))
+    f.append(marks())
+    f.append(text(W / 2, y0 + bh + 26, "Cut on the marks, not on the colours: the black runs 3 mm past the outer cut.", 2.6, "#666", "Archivo"))
+    b = [text(W / 2, 22, "SIDE 2 / 2 &#183; BACKS (QR)", 5, NOIR, "Bungee"),
+         text(W / 2, 29, "Mirrored on purpose: each back lands behind its front when you flip on the long edge.", 2.7, "#444", "Archivo"),
+         f'<rect x="{x0 - BL}" y="{y0 - BL}" width="{bw + 2 * BL}" height="{bh + 2 * BL}" fill="{BONE}"/>']
+    q = 12.0
+    for (cx, cy), code in zip(centres(mirror=True), TOKEN_CODES):
+        b.append(f'<g class="qrg" data-code="{code}" data-x="{cx - q / 2:.2f}" data-y="{cy - 1.4 - q / 2:.2f}" data-s="{q}"></g>'
+                 + text(cx, cy + 7.5, code, 2.2, NOIR, "IBM Plex Mono", extra='font-weight="700" letter-spacing=".12"'))
+    b.append(marks())
+    return _page("The Last Query - query tokens A4 duplex grid", [_sheet(f), _sheet(b)])
+
+
 def notebook():
     """Detective Notebook V2: A5, 2 pages (front: suspects x traits, back: my clues, accusation, table talk)."""
     W, H = 148, 210
@@ -280,5 +329,6 @@ def notebook():
 if __name__ == "__main__":
     (bp.SRC / "tokens_A4.html").write_text(tokens_sheet())
     (bp.SRC / "tokens_A4_glue.html").write_text(tokens_glue_sheet())
+    (bp.SRC / "tokens_A4_grid.html").write_text(tokens_grid_sheet())
     (bp.SRC / "notebook_A5.html").write_text(notebook())
     print("tokens + notebook written")

@@ -163,3 +163,10 @@ Les textes du jeu restent en anglais. Codes des cartes inchangés (`LIB-01` … 
   - un jeton scanné à la place d'une carte est signalé ;
   - la recharge renvoie à la réserve ;
   - pas de défilement horizontal.
+
+### T2 ✅ Planche de jetons recto verso « découpe simple » (demande du 2026-11-26)
+- `DA/tokens/the-last-query_query-tokens_A4_duplex-grid.pdf` : les 20 jetons en **carrés de 20 × 20 mm, collés en grille 4 × 5**. On découpe à la règle ou au massicot : 5 coupes verticales + 6 horizontales, le long des traits de coupe.
+- Chaque face a une seule couleur de fond : noir au recto, papier au verso. Un léger décalage d'impression recto verso ne se voit donc pas.
+- Fond perdu de 3 mm autour du bloc. Le verso est en miroir pour retourner sur le bord long.
+- Les QR Q-01, Q-07 et Q-20 ont été décodés à leur place sur le verso.
+- Les planches rondes (recto verso et à coller) restent disponibles.

@@ -97,9 +97,10 @@ Regenerate board, cards and brand sheet: `python3 DA/tools/build_print.py && zsh
 ## Step 5: tokens, pawns & notebook (`DA/tokens/`) ✅ V2 validated on 2026-11-25
 
 - **Query Tokens are physical since playtest 1 (T1)**: the app no longer counts them. 20 tokens Ø 20 mm, front = black disc with the logo's red `;`, **back = unique QR `TLQ:Q-01` … `TLQ:Q-20` + backup code** (scanned in the Police Console to pay a query; a token works once per round). Bleed 3 mm, cut along the dotted circles. QR checked with the app's reader (jsQR).
+  - **`the-last-query_query-tokens_A4_duplex-grid.pdf` (recommended, easy cut)**: 2 pages, double-sided, flip on the long edge, 100 %, 250-350 g/m² card. The 20 tokens are **20 × 20 mm squares in a gapless 4 × 5 grid**: cut straight along the crop marks with a ruler or a guillotine (5 vertical + 6 horizontal cuts). One solid colour per side, so a small duplex shift never shows; 3 mm bleed around the block; backs mirrored. QR decoded at their mirrored places (Q-01, Q-07, Q-20).
   - `the-last-query_query-tokens_pawns_A4_duplex.pdf` (2 pages, double-sided, flip on long edge, 250-350 g/m² card): page 1 = token fronts + **4 pawns P1-P4** to fold into tents, page 2 = token backs, mirrored.
   - `the-last-query_query-tokens_A4_glue.pdf` (1 page, one-sided): fronts on top, backs below. Glue the fronts on one side of a 1.5 mm card and the backs on the other side, then cut. No duplex alignment problem.
-  - `*_300dpi.png`: previews of both.
+  - `*_300dpi.png`: previews.
 - `the-last-query_detective-notebook_A5_2-sides_bleed3mm.pdf`: one A5 sheet per player, two sides (updated after playtest 1: 1 query per turn, "two clues disagree" rule, example query in real SQL). Side 1: 12 suspects × age / height / shoe / hand / hair / glasses / smell + ✗, golden rules, W.A.T.S.O.N. updates (rounds 4/8/12). Side 2: *My clues* (object, room, what it reveals, seen ×3), accusation template, table talk, example query with its SQL.
 - Source: `tools/build_tokens.py`. V1 (coffee, clock, suspended tokens) is in `_archive_v1/`.
 
