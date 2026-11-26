@@ -29,7 +29,7 @@ export function EvidenceCard({ item, note }: { item: EvidenceItem; note?: string
   );
 }
 
-function Camera({ onCode }: { onCode: (code: string) => void }) {
+export function Camera({ onCode }: { onCode: (code: string) => void }) {
   const video = useRef<HTMLVideoElement>(null);
   const [on, setOn] = useState(false);
   const [err, setErr] = useState('');

@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { emit } from '../socket';
-import { Bar, clockFor, Icon, Label, PawnIcon, Tokens, useGame, useMe } from '../ui';
+import { Bar, clockFor, Icon, Label, PawnIcon, useGame, useMe } from '../ui';
 import { JoinQr } from './Lobby';
 
 interface Confirm { title: string; body: ReactNode; ok: string; run: () => Promise<unknown> }
@@ -55,7 +55,6 @@ export default function Manor() {
                 <div className="name">{p.name}{p.id === me.id && <span className="muted"> (you)</span>}</div>
                 <div className="small muted">{current?.id === p.id ? 'Playing now' : `${p.evidence} cards · ${p.queries} queries`}</div>
               </div>
-              <Tokens n={p.tokens} max={game.caseInfo.maxTokens} />
               <span className={`dot ${p.connected ? '' : 'off'}`} title={p.connected ? 'online' : 'offline'} />
             </div>
           ))}
@@ -65,7 +64,7 @@ export default function Manor() {
       <div className="note row" style={{ alignItems: 'flex-start' }}>
         <span style={{ width: 22, flex: 'none', color: '#9a6311' }}>{Icon.bolt}</span>
         <p className="small">
-          <b>Next W.A.T.S.O.N. update {roundsLeft === 0 ? 'at the end of this round' : `in ${roundsLeft + 1} rounds`}.</b> One true trait of the killer for everyone, and +1 token each.
+          <b>Next W.A.T.S.O.N. update {roundsLeft === 0 ? 'at the end of this round' : `in ${roundsLeft + 1} rounds`}.</b> One true trait of the killer for everyone, and everyone takes 1 token from the reserve.
         </p>
       </div>
 
@@ -74,7 +73,7 @@ export default function Manor() {
         <ol className="small" style={{ margin: '8px 0 0', paddingLeft: 18, display: 'grid', gap: 6 }}>
           <li><b>Move</b> up to 2 rooms. <b>Once</b> on the way, search: draw and scan <b>1 card</b>.</li>
           <li><b>Or, instead of searching:</b> recharge (Server Room) or accuse (Library).</li>
-          <li><b>Anytime on your turn:</b> ONE query for 1 token. Bonus cards: play them on your turn.</li>
+          <li><b>Anytime on your turn:</b> ONE query: scan a Query Token, then put it back in the reserve. A token works once per round. Bonus cards: play them on your turn.</li>
           <li>A clue found twice is probably true. 0 suspects found? One clue is fake!</li>
         </ol>
       </div>

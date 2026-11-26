@@ -114,8 +114,8 @@ def pages():
       <ol class="steps" style="margin-top:3.5mm">
         <li>Every room has a deck of <b>clue cards</b>. Walk there to draw them.</li>
         <li>Some clues describe <b>the killer</b>. Some are <b>dead ends</b>. A few are <b>fakes</b>.</li>
-        <li>On your phone, <b>filter the 12 suspects</b> with your clues. Each search costs <b>1 Query Token</b> {tk()}.</li>
-        <li>Recharge your tokens in the <b>Server Room</b>, then <b>accuse</b> in the Library.</li>
+        <li>On your phone, <b>filter the 12 suspects</b> with your clues. Each search costs <b>1 Query Token</b> {tk()}: scan the QR on its back.</li>
+        <li>Take new tokens from the reserve in the <b>Server Room</b>, then <b>accuse</b> in the Library.</li>
       </ol>
       <p style="margin-top:2mm;color:#6B665C">No SQL needed: the phone shows simple sentences&#8230; and the real SQL under each result.</p>
     """))
@@ -128,7 +128,7 @@ def pages():
         <div class="it" style="grid-column:span 3;flex-direction:row;gap:3mm;text-align:left"><img src="board_thumb.png" style="width:50mm;display:block">
           <span><b>1 GAME BOARD</b><br>Ravenscroft Manor: 9 rooms. 7 have a deck. The Server Room recharges your tokens.</span></div>
         <div class="it"><img src="{CARDS}lib-01.png" style="width:14mm"><span><b>40 CLUE CARDS</b><br>34 evidence to scan, 6 bonus</span></div>
-        <div class="it">{qt}<span><b>16 QUERY TOKENS</b><br>3 each + spares</span></div>
+        <div class="it">{qt}<span><b>20 QUERY TOKENS</b><br>QR on the back. 3 each, the rest is the reserve</span></div>
         <div class="it">{pawn}<span><b>4 PAWNS</b><br>P1 to P4</span></div>
       </div>
       <p style="margin-top:2mm">Plus <b>1 Detective Notebook pad</b> (one sheet each) and <b>1 smartphone per player</b> (not included).</p>
@@ -136,7 +136,7 @@ def pages():
       <ol class="steps">
         <li>The <b>host</b> starts a game in the Police Console app. Everyone joins with their phone.</li>
         <li><b>Shuffle each room deck</b> (the room is on the back) and put it face down on its room.</li>
-        <li>Everyone puts their pawn in the <b>Grand Hall</b> and takes <b>3 Query Tokens</b> {tk()} and a notebook sheet.</li>
+        <li>Everyone puts their pawn in the <b>Grand Hall</b> and takes <b>3 Query Tokens</b> {tk()} and a notebook sheet. The other tokens are the <b>reserve</b>.</li>
         <li>The <b>youngest</b> player starts. Play goes clockwise.</li>
       </ol>
     """))
@@ -149,10 +149,10 @@ def pages():
         Scan it <b>secretly</b> and keep it face down in front of you (never put it back). <b>Only 1 card per turn.</b>
         An empty deck means the room has been searched clean.</p></div></div>
       <div class="turn"><div class="ico">{ic("magnifier", "8mm", 2)}</div><div><h3>2. Or, instead of searching</h3>
-        <p><b>Recharge</b> <i>(Server Room only)</i>: refill up to <b>3 tokens</b>. You can never have more than 3.</p>
+        <p><b>Recharge</b> <i>(Server Room only)</i>: take tokens from the reserve until you have <b>3</b>. Never more than 3.</p>
         <p><b>Accuse</b> <i>(Library only)</i>: see page 7.</p></div></div>
       <div class="turn"><div class="ico" style="background:{RED};border-left-color:{NOIR}">{ic("terminal", "8mm", 2)}</div><div><h3>Anytime: Query (once)</h3>
-        <p>During your turn, pay <b>1 {tk()}</b> to run <b>one</b> search on your phone, with <b>up to 2 conditions</b>. <b>Only 1 query per turn.</b></p>
+        <p>Write <b>one</b> search on your phone (<b>up to 2 conditions</b>), then <b>scan one of your tokens</b> {tk()} to run it and put the token back in the reserve. <b>Only 1 query per turn.</b> A token works once per round.</p>
         <p><b>Bonus cards</b>: play one you kept, at any time on your turn. It is not your action.</p></div></div>
       <div class="box"><div class="t">&gt; THE SERVER ROOM</div><p>It is in the corner <b>opposite the Library</b> and has no cards. Going there to recharge costs you a search: choose the right moment!</p></div>
     """))
@@ -177,7 +177,7 @@ def pages():
     # 6 ---------------------------------------------------------------- the phone + watson
     P.append(page(6, "THE PHONE", f"""
       <h1><small>&gt; NO SQL NEEDED</small>The Police Console</h1><div class="rule"></div>
-      <p>Write your query <b>block by block</b>: tap SELECT, name, FROM, guests, WHERE, then a column, a comparison and a value. Only the blocks that make sense light up. <b>Every column is open</b>, even without a clue. Tap <b>Run</b> twice to pay <b style="white-space:nowrap">1 {tk()}</b>.</p>
+      <p>Write your query <b>block by block</b>: tap SELECT, name, FROM, guests, WHERE, then a column, a comparison and a value. Only the blocks that make sense light up. <b>Every column is open</b>, even without a clue. Then <b>scan a Query Token</b> {tk()} (or type its code, e.g. Q-07) to run it.</p>
       <div class="code" style="font-size:8.6pt"><span class="k">SELECT</span> name <span class="k">FROM</span> guests<br><span class="k">WHERE</span> shoe = 44 <span class="k">AND</span> height <span class="k">BETWEEN</span> 1.85 <span class="k">AND</span> 1.90;
       <br><span class="c">&#8594; 2 suspects found: Oscar Lindqvist, Hugo Ravenscroft</span></div>
       <p style="margin-top:2.4mm">You only see the <b>names that match</b>, never the whole table. With <b>1 query per turn</b>,
@@ -185,7 +185,7 @@ def pages():
       <div class="box red"><div class="t">&gt; 0 SUSPECTS FOUND</div><p>Nobody matches both conditions: <b>one of your two clues is fake</b>. Try them separately to find which one.</p></div>
       <h2>&gt; W.A.T.S.O.N. UPDATES</h2>
       <p>Every <b>4 rounds</b> (rounds 4, 8 and 12) the host taps <b>End round</b> and the app:</p>
-      <ul style="margin:1.5mm 0 0 5mm"><li>reveals <b>one true trait of the killer</b> to everyone;</li><li>gives every detective <b>+1 {tk()}</b> (max 3).</li></ul>
+      <ul style="margin:1.5mm 0 0 5mm"><li>reveals <b>one true trait of the killer</b> to everyone;</li><li>tells every detective to take <b>1 {tk()}</b> from the reserve (max 3).</li></ul>
     """))
     # 7 ---------------------------------------------------------------- accuse + table talk
     P.append(page(7, "ACCUSE", f"""
@@ -198,7 +198,7 @@ def pages():
       <ol class="steps" start="3" style="counter-reset:s 2"><li>Type the name in the app.</li></ol>
       <div class="grid2" style="margin-top:2mm">
         <div class="box" style="margin:0"><div class="t">&gt; RIGHT</div><p><b>You win!</b> Read the solution in the app together.</p></div>
-        <div class="box red" style="margin:0"><div class="t">&gt; WRONG</div><p>Go back to the <b>Grand Hall</b> and lose all your {tk()}. You stay in the game.</p></div>
+        <div class="box red" style="margin:0"><div class="t">&gt; WRONG</div><p>Go back to the <b>Grand Hall</b> and put all your {tk()} back in the reserve. You stay in the game.</p></div>
       </div>
       <h2>&gt; TABLE TALK (SAY IT IN ENGLISH)</h2>
       <div class="say">&#8220;I found a muddy footprint in the Greenhouse.&#8221;</div>

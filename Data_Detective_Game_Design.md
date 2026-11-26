@@ -35,7 +35,7 @@ The killer left traces all over the manor, and also **planted fake clues** to tr
 - Every room has a deck of **clue cards**.
 - Some clues describe **the killer** (shoe size, height, left-handed…). Some are **dead ends**. A few are **fake clues planted by the killer**.
 - On your phone, you **filter the list of suspects** with your clues. That's SQL, shown as simple sentences.
-- Each search on the phone costs **1 Query Token** `;`, and you get **one search per turn**. Tokens are recharged in the **Server Room** (at the opposite end of the manor from the Library, with no cards to search), and everyone gets +1 token at each W.A.T.S.O.N. update.
+- Each search on the phone costs **1 physical Query Token** `;`: you **scan the QR on its back**, then put it back in the reserve. One search per turn. Tokens are recharged in the **Server Room** (at the opposite end of the manor from the Library, with no cards to search), and everyone gets +1 token at each W.A.T.S.O.N. update.
 
 ---
 
@@ -46,7 +46,7 @@ The killer left traces all over the manor, and also **planted fake clues** to tr
 | Game board (manor map) | 1 | 9 rooms, A2 |
 | Detective pawns | 4 | no special powers |
 | Clue cards | 40 | 7 room decks of 5–6 cards (no deck in the Grand Hall or the Server Room) |
-| Query Tokens `;` | 16 | 3 per player + spares |
+| Query Tokens `;` | 20 | physical, `;` on the front, unique QR on the back (`TLQ:Q-01` … `TLQ:Q-20`). 3 per player, the rest is the **reserve** |
 | Detective Notebook | 1 pad | suspects × traits grid |
 | Phone app "Police Console" | — | one phone per player |
 
@@ -88,7 +88,7 @@ The killer left traces all over the manor, and also **planted fake clues** to tr
 ### Setup
 1. The host starts a game on the app. Everyone joins with their phone.
 2. Shuffle each room deck and place it face down on its room.
-3. Everyone puts their pawn in the **Grand Hall** and takes **3 Query Tokens**.
+3. Everyone puts their pawn in the **Grand Hall** and takes **3 Query Tokens**. The other tokens form the **reserve**, next to the board.
 4. The **youngest** player starts. Play goes clockwise.
 
 ### Your turn
@@ -97,10 +97,10 @@ The killer left traces all over the manor, and also **planted fake clues** to tr
 - *Example: walk through the Music Room, draw its card, then go on to the Greenhouse. Or walk 2 rooms and draw in the second one.*
 
 **② OR, INSTEAD OF SEARCHING**:
-- **Recharge** *(Server Room only)*: refill up to **3 tokens** (you can never have more than 3).
+- **Recharge** *(Server Room only)*: take tokens from the reserve until you have **3** (you can never have more than 3).
 - **Accuse** *(Library only)*: see below.
 
-**Anytime during your turn: QUERY (once).** Pay **1 token** to run **one** search on your phone (up to **2 conditions**). Only **1 query per turn**.
+**Anytime during your turn: QUERY (once).** Write your search on your phone (up to **2 conditions**), then **scan one of your Query Tokens** (QR on the back, or type its code) to run it. Put the token back in the **reserve**. Only **1 query per turn**. A token works **once per round**: the app refuses a token already scanned during the same round.
 
 **Anytime during your turn: BONUS.** Play a Bonus card you kept (see §6). It is not your action.
 
@@ -109,7 +109,7 @@ The killer left traces all over the manor, and also **planted fake clues** to tr
 ### W.A.T.S.O.N. update
 Every **4 rounds**, the host taps *End round* and the app:
 - reveals **one true trait of the killer to everyone**;
-- gives **every detective +1 token** (max 3).
+- tells **every detective to take 1 token** from the reserve (max 3).
 
 This is the **only** way to get tokens outside the Server Room. No one gets stuck, and the game never drags.
 
@@ -120,7 +120,7 @@ Go to the **Library** and say out loud, in English, the killer's full profile:
 
 Then type the name in the app.
 - ✅ **Right**: you win!
-- ❌ **Wrong**: go back to the **Grand Hall** and lose all your tokens. You stay in the game.
+- ❌ **Wrong**: go back to the **Grand Hall** and put all your tokens back in the reserve. You stay in the game.
 
 ### Golden rule (printed in the booklet)
 > ***"Find the same clue twice, and it's probably true."***
@@ -181,9 +181,9 @@ The player **writes the query block by block** by tapping blocks. At each step, 
 - **Every column is open from the start** (age, height, shoe, hand, hair, glasses, smell), even without a clue about it (after playtest 1). The player's clues are shown above as a reminder, never filled in automatically.
 - Comparisons: `=`, `<>`, `>`, `<`, `BETWEEN … AND …`. The query is also translated into plain English.
 - The result is the **list of matching names**, or **"0 suspects found"**.
-- **1 query per turn, 1 token, max 2 conditions.** The Run button asks for a second tap, so a slip of the finger never spends a token. With 3–4 clues you need several turns and your notebook to cross-check.
+- **1 query per turn, 1 physical token, max 2 conditions.** The app does not count tokens: to run the query, the player scans the QR on the back of a token (or types its code, e.g. `Q-07`). A token already scanned this round is refused, so a player cannot keep one token and reuse it. Writing a query is free: the token is only scanned once the query is complete. With 3–4 clues you need several turns and your notebook to cross-check.
 - The phone **never shows the whole table**: you only see names that match.
-- Other screens: **scanner** (QR + backup code), **my clues** (list of scanned cards), **accuse**, and **host mode** (*End round*, W.A.T.S.O.N. updates).
+- Other screens: **scanner** (QR + backup code, for cards and for Query Tokens), **my clues** (list of scanned cards), **accuse**, and **host mode** (*End round*, W.A.T.S.O.N. updates).
 - End of game: *"You wrote 7 SQL queries tonight!"* with the full list.
 
 ---
@@ -261,7 +261,7 @@ Size **44** · **left**-handed · height **1.85–1.90 m** · **blond** · smell
 The fakes mostly frame **Margaret** (lavender, size 38, grey hair): Oscar tried to make the wife look guilty.
 
 ### W.A.T.S.O.N. updates (every 4 rounds)
-Round 4: height 1.85–1.90 m · Round 8: blond · Round 12: smells of cigar. Each time, every detective also gets +1 token (max 3).
+Round 4: height 1.85–1.90 m · Round 8: blond · Round 12: smells of cigar. Each time, every detective also takes 1 token from the reserve (max 3).
 
 ### Solution
 **Oscar Lindqvist**, 47, 1.86 m, size 44, left-handed, blond, smells of cigar. He poisoned Victor's tea with foxglove because Victor had found out he was selling company data.

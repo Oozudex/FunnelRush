@@ -1,7 +1,7 @@
 # THE LAST QUERY : retours du playtest n°1 (2026-11-25)
 
 Statuts : ⬜ à faire · 🔄 en cours · ✅ fait · ❓ à trancher avec le groupe.
-**Point au 2026-11-25 : tout est fait.** L'app est testée en local à 375 px (hôte + invité) et **n'est pas encore redéployée** sur GitHub Pages.
+**Point au 2026-11-25 : tout est fait.** L'app est testée en local à 375 px (hôte + invité) et **redéployée sur GitHub Pages** (commit `e0174dd` sur Oozudex/FunnelRush), vérifiée en ligne à 375 px.
 Les textes du jeu restent en anglais. Codes des cartes inchangés (`LIB-01` … `CEL-06`, QR `TLQ:<code>`).
 
 ---
@@ -111,4 +111,55 @@ Les textes du jeu restent en anglais. Codes des cartes inchangés (`LIB-01` … 
   - toutes les colonnes sont ouvertes ;
   - aucune erreur console, pas de défilement horizontal.
 - **Impression** : cartes (PDF 63 × 88 fond perdu 3 mm, PDF A4 maison, PNG 300 DPI des 6 Bonus, aperçus), livret A5 (fond perdu 3 mm + traits de coupe, et version écran), carnet A5. Tous régénérés avec les mêmes scripts et réglages. Le plateau n'a pas été touché.
-- **Pas fait** : redéploiement de l'app (`npm run build:pages` puis push de `docs/`), en attente de votre accord.
+- **Redéployé** le 2026-11-25 : `npm run build:pages`, puis copie du projet dans un clone du dépôt et push sur `main`. La version en ligne affiche le nouveau tour.
+
+---
+
+## Nouveau retour (2026-11-26) : jetons de requête physiques
+
+### T1 ✅ Les jetons `;` sortent de l'app : jetons physiques avec un QR au dos (✔ option **A** choisie le 2026-11-26 · fait, **pas encore redéployé**)
+**Retour :** « Les jetons pour faire les requêtes, il faut les enlever de l'application. On les met en physique avec des QR codes derrière, et il faudra les scanner pour pouvoir faire une requête. »
+
+**Ce qui change :** l'app ne compte plus les jetons. Pour lancer une requête, on scanne le QR au dos d'un jeton physique (ou on tape son code de secours, par ex. `Q-07`). Un jeton scanné donne une requête, puis il retourne à la **réserve** au milieu de la table. Tout le reste devient physique : 3 jetons au départ (3 au plus), recharge en Server Room, +1 à chaque mise à jour W.A.T.S.O.N., Spare Battery +1, mauvaise accusation = on rend tous ses jetons. La limite d'une requête par tour reste contrôlée par l'app.
+
+**Comment empêcher qu'un jeton serve à l'infini ? (à choisir)**
+- **Option A (recommandée) : code unique, bloqué pour le reste de la manche.** 20 jetons `Q-01` … `Q-20`. Quand un jeton est scanné, l'app le refuse jusqu'à la fin de la manche, pour tous les joueurs. Le joueur le remet dans la réserve. Garder un jeton pour le rescanner au tour suivant ne marche donc pas : pendant la manche, il faut un autre jeton. C'est simple, rien à scanner en plus, et la réserve physique fait foi comme l'argent d'un jeu de société.
+- **Option B (stricte) : code unique, consommé pour toute la partie.** Un jeton scanné est mort, et on le met dans une boîte « used ». Il faut donc beaucoup plus de jetons (environ 40). La partie peut aussi s'arrêter faute de jetons, et la recharge devient « prendre des jetons neufs ».
+- **Option C (la plus simple) : le même QR sur tous les jetons.** L'app ne vérifie rien d'autre que « 1 requête par tour ». Tout repose sur l'honnêteté, comme les billets d'un Monopoly.
+
+**Impacts :**
+- **Règles et game design** (`Data_Detective_Game_Design.md` §2, §3, §5, §7 · `Regles_V2_Simplifiees.md` §4, §7) : la réserve de jetons, « scan a token to query, then put it back in the reserve », et la recharge, la mise à jour W.A.T.S.O.N., la Spare Battery et la mauvaise accusation en version physique.
+- **Livret** (`DA/tools/build_rules.py`, p. 3 Setup, p. 4 Your turn, p. 6 Police Console) : à régénérer (fond perdu 3 mm, traits de coupe).
+- **Planche de jetons** (`DA/tools/build_tokens.py`, `DA/tokens/`) : 20 jetons Ø 20 mm, recto `;` inchangé, **verso = QR `TLQ:Q-07` + code de secours**. Deux PDF :
+  1. recto verso A4 (verso en miroir, retourner sur le bord long) ;
+  2. une version « à coller » : recto et verso sur la même face, chacun collé d'un côté du carton de 1,5 mm. Pas de souci d'alignement sur une imprimante maison.
+
+  On garde Ø 20 mm pour que les jetons rentrent dans les emplacements de la Server Room sur le plateau V3. Le QR fait alors environ 13 mm. Il se scanne au téléphone de près, et le code de secours marche toujours. Les pions P1 à P4 restent sur la planche.
+- **Cartes** : texte de la Spare Battery inchangé (« Take 1 Query Token (max 3) », c'est déjà physique). Dans l'app, « Play it » ne donne plus de jeton : l'app dit seulement « take 1 token from the reserve ».
+- **Carnet** : rien à changer (« 1 query per turn = 1 ; » et « +1 ; » aux manches 4, 8, 12 restent vrais).
+- **App** :
+  - **Moteur** (`src/engine/game.ts`, `shared/types.ts`) : plus de compteur `tokens`. Les codes de jetons sont reconnus, la règle anti-réutilisation choisie est appliquée, et la requête exige un jeton scanné.
+  - **Police Console** (`Query.tsx`) : « Run » devient « Scan a token to run » (caméra + code de secours, même écran que les cartes).
+  - **Recharge** (`Play.tsx`) : reste l'action du tour en Server Room, avec le texte « take tokens from the reserve up to 3 ».
+  - **Messages** : la mise à jour W.A.T.S.O.N., la mauvaise accusation et la Spare Battery disent quoi faire avec les jetons physiques.
+  - **Affichage** : le compteur `; ; ;` disparaît de l'en-tête, du menu (jetons par joueur), de la salle d'attente et de la fin de partie.
+  - **Scan d'une carte** : si on scanne un jeton à la place d'une carte, l'app répond « This is a Query Token: use it in the Police Console ».
+  - **README** de l'app à mettre à jour.
+- **Plateau V3** : rien à changer, les emplacements Ø 20 mm de la Server Room restent bons.
+
+**Fait pour T1 (2026-11-26) :**
+- **Règles** : game design, règles V2, livret (p. 2, 3, 4, 6, 7, PDF régénérés) et README de la DA, de l'app.
+- **Planche** :
+  - `DA/tokens/the-last-query_query-tokens_pawns_A4_duplex.pdf` (recto verso, retourner sur le bord long : recto `;` + pions, verso QR en miroir) ;
+  - `DA/tokens/the-last-query_query-tokens_A4_glue.pdf` (une face : recto et verso à coller de chaque côté du carton) ;
+  - fond perdu de 3 mm, Ø 20 mm, QR `TLQ:Q-01` … `Q-20` + code de secours. Le QR imprimé a été décodé avec le lecteur de l'app (`TLQ:Q-07`) ;
+  - l'ancienne planche `…_query-tokens_pawns_A4.pdf` est dans la corbeille.
+- **App** : plus de compteur de jetons. « Scan a token to run » avec la caméra ou le code tapé (`Q-07`, `q7`, `TLQ:Q-07` acceptés).
+- **Testé en local à 375 px (hôte + invité)** :
+  - le jeton Q-07 paie la requête de l'hôte ;
+  - il est refusé à l'invité pendant la même manche ;
+  - Q-08 passe ;
+  - à la manche 2, Q-07 repasse ;
+  - un jeton scanné à la place d'une carte est signalé ;
+  - la recharge renvoie à la réserve ;
+  - pas de défilement horizontal.

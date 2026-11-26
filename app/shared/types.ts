@@ -47,7 +47,6 @@ export interface PublicPlayer {
   name: string;
   pawn: Pawn | null;
   connected: boolean;
-  tokens: number;
   queries: number;
   evidence: number;
   isHost: boolean;

@@ -15,13 +15,15 @@ const WORDS = ['RAVEN', 'STORM', 'ALIBI', 'MANOR', 'GHOST', 'CIGAR', 'TEACUP', '
 export const MAX_PLAYERS = 4;
 /** How many cards a detective may draw and scan per turn (playtest 1: only one, during the move). */
 export const SCANS_PER_TURN = 1;
+/** Physical Query Tokens (playtest 1, T1): the QR on the back says TLQ:Q-01 … TLQ:Q-20. */
+export const TOKEN_COUNT = 20;
+export const isTokenCode = (code: string) => /^Q-\d{2}$/.test(code) && Number(code.slice(2)) >= 1 && Number(code.slice(2)) <= TOKEN_COUNT;
 
 interface Player {
   id: string;
   secret: string;
   name: string;
   pawn: Pawn | null;
-  tokens: number;
   evidence: EvidenceItem[];
   queries: QueryRecord[];
   sockets: Set<string>;
@@ -50,6 +52,8 @@ export class Game {
   scans = 0;
   /** Rules after playtest 1: one query per turn. */
   queried = false;
+  /** Query Tokens scanned this round: refused again until the round ends (T1, option A). */
+  usedTokens = new Set<string>();
   touched = Date.now();
   logId = 0;
 
@@ -73,7 +77,6 @@ export class Game {
       secret: randomHex(12),
       name: clean,
       pawn: PAWNS.find((x) => !used.has(x)) ?? null,
-      tokens: this.def.startTokens,
       evidence: [],
       queries: [],
       sockets: new Set(),
@@ -132,7 +135,7 @@ export class Game {
     this.order = [...ids.slice(first), ...ids.slice(0, first)];
     this.turn = 0;
     this.round = 1;
-    for (const p of this.players.values()) p.tokens = this.def.startTokens;
+    this.usedTokens = new Set();
     this.phase = 'playing';
     this.action = null;
     this.scans = 0;
@@ -173,13 +176,13 @@ export class Game {
     this.queried = false;
     this.turn = 0;
     this.round += 1;
+    this.usedTokens = new Set();
     if (done % this.def.updateEvery === 0) {
       const idx = done / this.def.updateEvery - 1;
       const u = this.def.updates[idx];
-      for (const p of this.players.values()) p.tokens = Math.min(this.def.maxTokens, p.tokens + 1);
       const text = u ? u.text : 'No new data recovered. The storm is too strong.';
       this.updates.push({ round: done, text, condition: u?.condition });
-      this.addLog('update', `W.A.T.S.O.N. update: ${text} Everyone gets +1 token.`);
+      this.addLog('update', `W.A.T.S.O.N. update: ${text} Everyone takes 1 Query Token from the reserve (max ${this.def.maxTokens}).`);
     }
     this.addLog('turn', `Round ${this.round} begins. ${this.current().name}'s turn.`);
   }
@@ -202,6 +205,7 @@ export class Game {
     const p = this.player(playerId);
     this.myTurn(p, 'search a room');
     const code = normalizeCode(raw);
+    if (isTokenCode(code)) throw new GameError('This is a Query Token, not a clue card. Use it in the Police Console to run a query.');
     const card = this.def.cards[code];
     if (!card) throw new GameError(`Unknown code "${raw.trim().slice(0, 20)}". Check the code printed under the QR.`);
     const existing = p.evidence.find((e) => e.code === code);
@@ -242,9 +246,7 @@ export class Game {
     const fx = item.bonus ?? this.def.cards[code]?.bonus;
     let msg: string;
     if (fx === 'token') {
-      if (p.tokens >= this.def.maxTokens) throw new GameError(`You already have ${this.def.maxTokens} tokens. Keep this card for later!`);
-      p.tokens += 1;
-      msg = '+1 Query Token. Discard the card.';
+      msg = `Take 1 Query Token from the reserve (max ${this.def.maxTokens}). Discard the card.`;
     } else if (fx === 'move') msg = 'Move up to 2 more rooms now. Discard the card.';
     else msg = 'Look at the top card of any room deck, put it back face down, then discard this card.';
     item.used = true;
@@ -260,12 +262,14 @@ export class Game {
     return s;
   }
 
-  query(playerId: string, conds: Condition[]): QueryRecord {
+  query(playerId: string, conds: Condition[], tokenRaw: string): QueryRecord {
     this.requirePlaying();
     const p = this.player(playerId);
     this.myTurn(p, 'run a query');
     if (this.queried) throw new GameError('Only 1 query per turn: you already ran yours. Tap "End my turn".');
-    if (p.tokens < 1) throw new GameError('No Query Token left. Recharge in the Server Room.');
+    const token = normalizeCode(String(tokenRaw ?? ''));
+    if (!isTokenCode(token)) throw new GameError(`"${String(tokenRaw ?? '').trim().slice(0, 20) || '?'}" is not a Query Token. Scan the QR on the back of a token, or type its code (e.g. Q-07).`);
+    if (this.usedTokens.has(token)) throw new GameError(`Token ${token} was already used this round. Put it back in the reserve and use another one.`);
     if (!Array.isArray(conds) || conds.length < 1 || conds.length > 2) throw new GameError('Use 1 or 2 conditions.');
     // playtest 1: every column is open from the start, clues are only a reminder
     const attrs = this.def.attributes;
@@ -280,7 +284,7 @@ export class Game {
     const rows = this.def.suspects.filter((s) =>
       conds.every((c) => matches(s.traits, attrs.find((a) => a.key === c.attr)!, c)),
     );
-    p.tokens -= 1;
+    this.usedTokens.add(token);
     this.queried = true;
     const rec: QueryRecord = {
       conditions: conds.map((c) => ({ attr: c.attr, op: c.op, value: c.value, ...(c.op === 'between' ? { value2: c.value2 } : {}) })),
@@ -297,8 +301,7 @@ export class Game {
     const p = this.player(playerId);
     this.myTurn(p, 'recharge');
     this.takeAction('recharge');
-    p.tokens = this.def.maxTokens;
-    this.addLog('recharge', `${p.name} recharged in the Server Room.`);
+    this.addLog('recharge', `${p.name} recharged in the Server Room (tokens from the reserve, up to ${this.def.maxTokens}).`);
   }
 
   accuse(playerId: string, suspectId: string): boolean {
@@ -314,8 +317,7 @@ export class Game {
       this.phase = 'over';
       this.addLog('accuse-right', `${p.name} accused ${s.name}. CASE CLOSED!`);
     } else {
-      p.tokens = 0;
-      this.addLog('accuse-wrong', `${p.name} accused ${s.name}. WRONG! Back to the Grand Hall, all tokens lost.`);
+      this.addLog('accuse-wrong', `${p.name} accused ${s.name}. WRONG! Back to the Grand Hall, all tokens back to the reserve.`);
       this.advance();
     }
     return correct;
@@ -343,7 +345,6 @@ export class Game {
         name: p.name,
         pawn: p.pawn,
         connected: p.sockets.size > 0,
-        tokens: p.tokens,
         queries: p.queries.length,
         evidence: p.evidence.filter((e) => e.kind !== 'bonus').length,
         isHost: p.id === this.hostId,
@@ -394,7 +395,7 @@ export class Game {
       players: [...this.players.values()].map(({ sockets, ...p }) => p),
       order: this.order, firstPlayerId: this.firstPlayerId, turn: this.turn, round: this.round,
       updates: this.updates, log: this.log, winnerId: this.winnerId, usedBonus: [...this.usedBonus],
-      lastAccusation: this.lastAccusation, action: this.action, scans: this.scans, queried: this.queried, touched: this.touched, logId: this.logId,
+      lastAccusation: this.lastAccusation, action: this.action, scans: this.scans, queried: this.queried, usedTokens: [...this.usedTokens], touched: this.touched, logId: this.logId,
     };
   }
 
@@ -403,7 +404,7 @@ export class Game {
     Object.assign(g, {
       phase: d.phase, hostId: d.hostId, order: d.order, firstPlayerId: d.firstPlayerId, turn: d.turn, round: d.round,
       updates: d.updates, log: d.log, winnerId: d.winnerId, usedBonus: new Set(d.usedBonus),
-      lastAccusation: d.lastAccusation, action: d.action ?? null, scans: d.scans ?? 0, queried: !!d.queried, touched: d.touched, logId: d.logId,
+      lastAccusation: d.lastAccusation, action: d.action ?? null, scans: d.scans ?? 0, queried: !!d.queried, usedTokens: new Set(d.usedTokens ?? []), touched: d.touched, logId: d.logId,
     });
     for (const p of d.players) g.players.set(p.id, { ...p, sockets: new Set() });
     return g;
@@ -441,6 +442,8 @@ export function normalizeCode(raw: string): string {
   let s = String(raw ?? '').trim().toUpperCase();
   if (s.startsWith('TLQ:')) s = s.slice(4);
   s = s.replace(/[^A-Z0-9]/g, '');
+  const t = s.match(/^Q(\d{1,2})$/);
+  if (t) return `Q-${t[1].padStart(2, '0')}`;
   const m = s.match(/^([A-Z]{3})(\d{1,2})$/);
   return m ? `${m[1]}-${m[2].padStart(2, '0')}` : s;
 }

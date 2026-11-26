@@ -96,7 +96,7 @@ export default function Lobby() {
           <ol className="small" style={{ margin: 0, paddingLeft: 20, display: 'grid', gap: 4 }}>
             <li>Shuffle the 7 room decks, face down on their rooms.</li>
             <li>All pawns in the <b>Grand Hall</b>.</li>
-            <li>Every detective takes <b>3 Query Tokens</b>.</li>
+            <li>Every detective takes <b>3 Query Tokens</b>. The other tokens are the <b>reserve</b>.</li>
           </ol>
           <div className="field">
             <label htmlFor="first">Who plays first? (the youngest)</label>

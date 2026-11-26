@@ -55,7 +55,7 @@
 ### Setup
 > 1. The host starts a game on the app. Everyone joins with their phone.
 > 2. Shuffle each room deck and place it face down on its room.
-> 3. Everyone puts their pawn in the **Grand Hall** and takes **3 Query Tokens**.
+> 3. Everyone puts their pawn in the **Grand Hall** and takes **3 Query Tokens**. The other tokens are the **reserve**.
 > 4. The **youngest** player starts.
 
 ### Your turn
@@ -63,10 +63,10 @@
 > - **Search**: **once** during your move (before it, halfway or at the end), draw the **top card** of the room you are in. Read it secretly and keep it face down in front of you. **Only 1 card per turn.**
 >
 > **② OR, INSTEAD OF SEARCHING**:
-> - **Recharge** *(Server Room only)*: refill up to **3 tokens**.
+> - **Recharge** *(Server Room only)*: take tokens from the reserve, up to **3**.
 > - **Accuse** *(Library only)*: see below.
 >
-> **Anytime on your turn: QUERY (once).** Pay **1 token** to search the guest database on your phone. Only **1 query per turn**.
+> **Anytime on your turn: QUERY (once).** Write your search on your phone, then **scan one of your Query Tokens** to run it and put the token back in the reserve. Only **1 query per turn**. A token works **once per round**.
 > **Anytime on your turn: BONUS.** Play a Bonus card you kept. It is not your action.
 >
 > **Your cards**: keep them **face down** in front of you and never put them back. Bonus cards stay **face up** until you play them.
@@ -76,7 +76,7 @@
 > *"The killer is **Oscar Lindqvist**: 47 years old, 1.86 m tall, size 44 shoes, left-handed!"*
 > Then type the name in the app.
 > - ✅ Right: **you win!**
-> - ❌ Wrong: go back to the **Grand Hall** and lose all your tokens. ❓Q3
+> - ❌ Wrong: go back to the **Grand Hall** and put all your tokens back in the reserve.
 
 ---
 
@@ -155,7 +155,7 @@ L'écran ressemble à une phrase à trous qu'on complète avec des boutons :
 ```
  FIND guests WHERE [ Shoe size ▾ ] [ is ▾ ] [ 44 ▾ ]
               AND  [ Hand ▾ ]      [ is ▾ ] [ left ▾ ]
-                                  [ RUN QUERY · 1 token ]
+                                  [ SCAN A TOKEN TO RUN ; ]
 ```
 
 Le résultat donne la liste des noms qui correspondent (ou « 0 suspect found »). En dessous, un petit encart :
@@ -164,7 +164,7 @@ Le résultat donne la liste des noms qui correspondent (ou « 0 suspect found »
  💡 Real SQL:  SELECT name FROM guests WHERE shoe = 44 AND hand = 'left';
 ```
 
-- **1 requête par tour, 1 jeton, 2 conditions maximum** (`WHERE` + `AND`). Toutes les colonnes sont ouvertes dès le départ (playtest 1). Pas besoin de comprendre le SQL pour jouer, mais on le voit à chaque requête.
+- **1 requête par tour, 2 conditions maximum.** On paie avec un **jeton physique** : on scanne le QR au dos (code de secours `Q-07`), puis on le remet dans la réserve. L'app ne compte plus les jetons, mais refuse un jeton déjà scanné pendant la manche (playtest 1, T1). (`WHERE` + `AND`). Toutes les colonnes sont ouvertes dès le départ (playtest 1). Pas besoin de comprendre le SQL pour jouer, mais on le voit à chaque requête.
 - Le téléphone **ne montre jamais toute la table** : on ne voit que les noms qui correspondent. Sans requête, on ne sait rien des suspects.
 - Bonus « école » : en fin de partie, l'app affiche **« You wrote 7 SQL queries tonight! »** avec la liste. C'est un super argument devant le jury.
 

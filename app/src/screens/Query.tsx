@@ -2,7 +2,8 @@ import React, { useMemo, useState } from 'react';
 import type { AttributeDef, Condition, QueryRecord } from '../../shared/types';
 import { describe, fmtValue } from '../../shared/sql';
 import { buzz, emit } from '../socket';
-import { Bar, Icon, Sheet, Tokens, useGame, useMe } from '../ui';
+import { Bar, Icon, Sheet, useGame, useMe } from '../ui';
+import { Camera } from './Scan';
 
 export function ResultTable({ rec, crossed, suspects }: { rec: QueryRecord; crossed: string[]; suspects: { id: string; name: string; link: string }[] }) {
   if (rec.names.length === 0)
@@ -103,7 +104,7 @@ const HINT: Record<State, string> = {
   VAL: 'Pick the value.',
   BAND: 'BETWEEN needs two values: value AND value.',
   VAL2: 'Pick the second value.',
-  NEXT: 'Ready! Run it, or add AND for a second condition (max 2).',
+  NEXT: 'Ready! Scan a Query Token to run it, or add AND for a second condition (max 2).',
 };
 
 function tokText(t: Tok, attrs: AttributeDef[]) {
@@ -120,7 +121,8 @@ export default function PoliceConsole({ crossed, onClose }: { crossed: string[];
   const [toks, setToks] = useState<Tok[]>([]);
   const [last, setLast] = useState<QueryRecord | null>(null);
   const [busy, setBusy] = useState(false);
-  const [confirm, setConfirm] = useState(false);
+  const [paying, setPaying] = useState(false);
+  const [tokenCode, setTokenCode] = useState('');
   const used = view.game.queried;
 
   // clues = reminder only, never filled in automatically
@@ -141,6 +143,7 @@ export default function PoliceConsole({ crossed, onClose }: { crossed: string[];
   const complete = state === 'NEXT';
   const add = (t: Tok) => {
     setLast(null);
+    setPaying(false);
     setToks((l) => [...l, t]);
     buzz(10);
   };
@@ -153,18 +156,15 @@ export default function PoliceConsole({ crossed, onClose }: { crossed: string[];
     (k === 'BETWEEN' && state === 'OP' && curA?.type === 'number') ||
     (k === 'AND' && (state === 'BAND' || (state === 'NEXT' && conds.length < MAX_CONDS)));
 
-  const run = async () => {
-    // a first tap asks to confirm: a slip of the finger never spends a token
-    if (!confirm) {
-      setConfirm(true);
-      setTimeout(() => setConfirm(false), 4000);
-      return;
-    }
-    setConfirm(false);
+  // the query is paid with a physical Query Token: scan its QR (or type its code)
+  const run = async (token: string) => {
+    if (!token.trim() || busy) return;
     setBusy(true);
     try {
-      const rec = await emit<QueryRecord>('query:run', conds);
+      const rec = await emit<QueryRecord>('query:run', conds, token);
       setLast(rec);
+      setPaying(false);
+      setTokenCode('');
       buzz(rec.names.length ? 50 : [100, 50, 100]);
       setTimeout(() => document.getElementById('q-result')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
     } catch (e) {
@@ -175,7 +175,7 @@ export default function PoliceConsole({ crossed, onClose }: { crossed: string[];
   };
 
   const valueOptions = curA && (state === 'VAL' || state === 'VAL2') ? curA.options : [];
-  const hint = state === 'NEXT' && conds.length >= MAX_CONDS ? 'Ready! Run your query (2 conditions max).' : HINT[state];
+  const hint = state === 'NEXT' && conds.length >= MAX_CONDS ? 'Ready! Scan a Query Token to run it (2 conditions max).' : HINT[state];
 
   // the contextual blocks: only what makes sense at this point of the sentence
   let palette: React.ReactNode = null;
@@ -217,8 +217,7 @@ export default function PoliceConsole({ crossed, onClose }: { crossed: string[];
     <Sheet title="Police Console" icon={Icon.console} onClose={onClose} full>
       <div className="stack">
         <div className="row spread">
-          <span className="small muted">1 query per turn = 1 token</span>
-          <Tokens n={me.tokens} max={caseInfo.maxTokens} />
+          <span className="small muted">1 query per turn = scan 1 Query Token <span className="tok">;</span></span>
         </div>
 
         {/* reminder of the clues: the player copies them into the query */}
@@ -250,8 +249,8 @@ export default function PoliceConsole({ crossed, onClose }: { crossed: string[];
             {complete ? <span className="kw">;</span> : <span className="caret" />}
           </div>
           <div className="row" style={{ gap: 0, justifyContent: 'flex-end' }}>
-            <button className="btn ghost small" disabled={!toks.length} onClick={() => { setLast(null); setToks((l) => l.slice(0, -1)); }}>Undo</button>
-            <button className="btn ghost small" disabled={!toks.length} onClick={() => { setLast(null); setToks([]); }}>Clear</button>
+            <button className="btn ghost small" disabled={!toks.length} onClick={() => { setLast(null); setPaying(false); setToks((l) => l.slice(0, -1)); }}>Undo</button>
+            <button className="btn ghost small" disabled={!toks.length} onClick={() => { setLast(null); setPaying(false); setToks([]); }}>Clear</button>
           </div>
         </div>
 
@@ -281,10 +280,29 @@ export default function PoliceConsole({ crossed, onClose }: { crossed: string[];
           </div>
         )}
         {used && !last && <p className="small red center"><b>You already ran your query this turn.</b> Only 1 query per turn.</p>}
-        <button className={`btn ${confirm ? 'primary' : 'red'} big block`} disabled={!complete || busy || me.tokens < 1 || used} onClick={run}>
-          {busy ? 'Running…' : used ? 'Query done for this turn' : confirm ? <>Tap again to spend 1 <span className="tok">;</span></> : <>Run the query <span className="tok">;</span></>}
-        </button>
-        {me.tokens < 1 && <p className="small red center">No token left: recharge in the Server Room or wait for the next W.A.T.S.O.N. update.</p>}
+        {!paying || used ? (
+          <button className="btn red big block" disabled={!complete || busy || used} onClick={() => setPaying(true)}>
+            {used ? 'Query done for this turn' : <>Scan a token to run <span className="tok">;</span></>}
+          </button>
+        ) : (
+          <div className="file stack">
+            <Bar icon={Icon.scan} color="red">Pay with a Query Token</Bar>
+            <p className="small">Scan the QR on the back of one of your tokens, then put the token back in the <b>reserve</b>. A token works <b>once per round</b>.</p>
+            <Camera onCode={run} />
+            <form onSubmit={(e) => { e.preventDefault(); run(tokenCode); }}>
+              <div className="field">
+                <label htmlFor="tk">No camera? Type the code on the token</label>
+                <div className="row">
+                  <input id="tk" className="input code grow" placeholder="Q-07" value={tokenCode} maxLength={8} autoCapitalize="characters" autoComplete="off"
+                    onChange={(e) => setTokenCode(e.target.value.toUpperCase())} />
+                  <button className="btn red flat" style={{ minWidth: 80 }} disabled={busy || tokenCode.trim().length < 2}>{busy ? '…' : 'Run'}</button>
+                </div>
+              </div>
+            </form>
+            <button className="btn ghost block" onClick={() => setPaying(false)}>Back</button>
+          </div>
+        )}
+        {!complete && !used && <p className="small muted center">You don't need a token yet: write your query first.</p>}
 
         {last && (
           <div id="q-result" className="stack" style={{ scrollMarginTop: 70 }}>

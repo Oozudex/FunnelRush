@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import type { ScanResult } from '../../shared/types';
 import { emit } from '../socket';
-import { Bar, Icon, PawnIcon, RoomIcon, Tokens, useGame, useMe } from '../ui';
+import { Bar, Icon, PawnIcon, RoomIcon, useGame, useMe } from '../ui';
 import { EvidenceCard, ScanPanel } from './Scan';
 import PoliceConsole from './Query';
 
@@ -74,7 +74,7 @@ export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: '
   const canScanMore = done === 'search' && game.scans < max;
   const searched = done === 'search' && !canScanMore;
   const other = done === 'recharge' || done === 'accuse';
-  const otherText = done === 'recharge' ? 'Tokens recharged.' : done === 'accuse' ? 'You accused.' : '';
+  const otherText = done === 'recharge' ? `Take Query Tokens from the reserve, up to ${game.caseInfo.maxTokens} in front of you.` : done === 'accuse' ? 'You accused.' : '';
   const cards = max === 1 ? '1 card' : `up to ${max} cards`;
 
   const endTurn = async () => {
@@ -107,7 +107,7 @@ export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: '
             )}
             {panel === 'recharge' && (
               <>
-                <p>Is your pawn in the <b>Server Room</b>? Your tokens go back to {game.caseInfo.maxTokens}.</p>
+                <p>Is your pawn in the <b>Server Room</b>? Take Query Tokens from the reserve until you have <b>{game.caseInfo.maxTokens}</b> in front of you.</p>
                 <button
                   className="btn primary big block"
                   disabled={busy}
@@ -117,7 +117,7 @@ export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: '
                     setBusy(false);
                   }}
                 >
-                  Recharge <Tokens n={game.caseInfo.maxTokens} max={game.caseInfo.maxTokens} />
+                  Recharge <span className="tok">;</span>
                 </button>
               </>
             )}
@@ -160,7 +160,7 @@ export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: '
       <Step n="2" title="Or, instead of searching" sub={other ? otherText : searched ? 'You searched this turn.' : 'Only in these two rooms.'} state={other ? 'done' : searched ? 'info' : undefined}>
         {!done && panel === null && (
           <div className="rooms">
-            <RoomTile room="Server Room" icon={RoomIcon['Server Room']} title="Recharge" sub={`Back to ${game.caseInfo.maxTokens} tokens`} onClick={() => setPanel('recharge')} />
+            <RoomTile room="Server Room" icon={RoomIcon['Server Room']} title="Recharge" sub={`Take tokens from the reserve, up to ${game.caseInfo.maxTokens}`} onClick={() => setPanel('recharge')} />
             <RoomTile room="Library" icon={RoomIcon.Library} title="Accuse the killer" sub="Name the killer and win" onClick={() => setPanel('accuse')} />
           </div>
         )}
@@ -170,13 +170,12 @@ export default function Play({ crossed, goTo }: { crossed: string[]; goTo: (t: '
       <Step
         n="3"
         title="Query W.A.T.S.O.N."
-        sub={game.queried ? 'Query done for this turn.' : 'Optional. Anytime on your turn: ONE query, for 1 token.'}
+        sub={game.queried ? 'Query done for this turn.' : 'Optional. Anytime on your turn: ONE query. Scan one of your Query Tokens to run it.'}
         state={game.queried ? 'done' : undefined}
       >
-        <button className="btn block" onClick={() => setConsoleOpen(true)} disabled={me.tokens < 1 && !game.queried}>
+        <button className="btn block" onClick={() => setConsoleOpen(true)} >
           {Icon.console} {game.queried ? 'See my query' : 'Open the Police Console'}
         </button>
-        {me.tokens < 1 && !game.queried && <p className="small red">No token left: recharge in the Server Room.</p>}
       </Step>
 
       <button className="btn primary big block" disabled={busy} onClick={endTurn}>
@@ -213,7 +212,7 @@ function Accuse({ onDone }: { onDone: () => void }) {
           “The killer is {s ? s.name : '________'}: __ years old, __ m tall, size __ shoes, ____-handed!”
         </p>
       </div>
-      <p className="small red">Wrong? Back to the Grand Hall and you lose all your tokens.</p>
+      <p className="small red">Wrong? Back to the Grand Hall, and all your Query Tokens go back to the reserve.</p>
       <button
         className="btn red big block"
         disabled={!pick || busy}

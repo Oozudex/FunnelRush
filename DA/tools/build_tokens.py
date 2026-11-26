@@ -129,23 +129,82 @@ def query_token(cx, cy, r=10, cut=True):
     return "".join(o)
 
 
+QB = 3.0                                 # Query Token bleed (mm): print norm of the project
+TOKEN_CODES = [f"Q-{k:02d}" for k in range(1, 21)]   # QR on the back: TLQ:Q-01 ... TLQ:Q-20 (same codes in the app)
+GRID = [(30 + c_ * 37.5, 47 + r_ * 26) for r_ in range(4) for c_ in range(5)]
+
+
+def query_token_front(cx, cy, r=10):
+    """Front: the V2 token art, with a 3 mm bleed."""
+    return query_token(cx, cy, r, True).replace(f'r="{r + TB}" fill="{NOIR}"', f'r="{r + QB}" fill="{NOIR}"', 1)
+
+
+def query_token_back(cx, cy, code, r=10):
+    """Back (playtest 1, T1): bone disc, QR 'TLQ:<code>' in the safe area, backup code under it."""
+    q = 11.0                                                    # QR side incl. quiet zone (mm)
+    return "".join([
+        f'<circle cx="{cx}" cy="{cy}" r="{r + QB}" fill="{BONE}"/>',
+        f'<circle cx="{cx}" cy="{cy}" r="{r - .7}" fill="none" stroke="{RED}" stroke-width=".45"/>',
+        f'<g class="qrg" data-code="{code}" data-x="{cx - q / 2:.2f}" data-y="{cy - 1.0 - q / 2:.2f}" data-s="{q}"></g>',
+        text(cx, cy + 7.35, code, 2.3, NOIR, "IBM Plex Mono", extra='font-weight="700" letter-spacing=".12"'),
+        cut_circle(cx, cy, r)])
+
+
+QR_SVG_RUN = """<script>
+document.querySelectorAll('g.qrg').forEach(function(g){
+  var q = qrcode(0, 'M'); q.addData('TLQ:' + g.dataset.code); q.make();
+  var n = q.getModuleCount(), m = n + 2, s = '';
+  for (var r = 0; r < n; r++) for (var c = 0; c < n; c++) if (q.isDark(r, c)) s += 'M' + (c + 1) + ',' + (r + 1) + 'h1v1h-1z';
+  var k = g.dataset.s / m;
+  g.setAttribute('transform', 'translate(' + g.dataset.x + ',' + g.dataset.y + ') scale(' + k + ')');
+  g.innerHTML = '<rect width="' + m + '" height="' + m + '" fill="#FFFFFF"/><path d="' + s + '" fill="#0B0B0C" shape-rendering="crispEdges"/>';
+});
+</script>"""
+
+
+def _sheet(o, W=210, H=297):
+    return (f'<div class="sheet" style="width:{W}mm;height:{H}mm;background:#fff"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
+            f'width="{W}mm" height="{H}mm">{"".join(o)}</svg></div>')
+
+
+def _page(title, sheets):
+    html = bp.page(title, 210, 297, "".join(sheets), ".sheet svg{display:block}", qr=True)
+    return html.replace("</body>", QR_SVG_RUN + "</body>")
+
+
 def tokens_sheet():
-    """V2: one A4 page = 20 Query Tokens (16 + 4 spare) + 4 detective standees."""
-    W, H = 210, 297
-    o = [text(12, 16, "THE LAST QUERY &#183; QUERY TOKENS &amp; PAWNS", 5, NOIR, "Bungee", "start"),
-         text(12, 21, "Print at 100 %. Glue on 1.5 mm card, then cut along the dotted circles and the grey lines. Bleed 1.5 mm.", 2.6, "#555", "Archivo", "start"),
-         text(12, 30, "QUERY TOKENS &#215; 16 (+4 SPARE) &#183; &#216; 20 MM", 2.8, RED, "Silkscreen", "start")]
-    for k in range(20):
-        r_, c_ = divmod(k, 5)
-        o.append(query_token(30 + c_ * 37.5, 47 + r_ * 26))
+    """Duplex A4 (playtest 1): page 1 = 20 token fronts + 4 pawns, page 2 = token backs (QR), mirrored for a long-edge flip."""
+    W = 210
+    o = [text(12, 16, "THE LAST QUERY &#183; QUERY TOKENS &amp; PAWNS &#183; SIDE 1 / 2", 5, NOIR, "Bungee", "start"),
+         text(12, 21, "Print BOTH pages double-sided (flip on long edge), 100 %, on 250-350 g/m&#178; card. Cut along the dotted circles. Bleed 3 mm. No duplex? Use the GLUE version.", 2.6, "#555", "Archivo", "start"),
+         text(12, 30, "QUERY TOKENS &#215; 20 (Q-01 &#8230; Q-20) &#183; &#216; 20 MM &#183; QR ON THE BACK", 2.8, RED, "Silkscreen", "start")]
+    for cx, cy in GRID:
+        o.append(query_token_front(cx, cy))
     y0 = 47 + 4 * 26 + 4
     o.append(text(12, y0, "DETECTIVE PAWNS &#215; 4 &#183; FOLD INTO A TENT", 2.8, RED, "Silkscreen", "start"))
     for k, d in enumerate(PAWNS):
         o.append(standee(22 + k * 46, y0 + 6, d))
     o.append(text(12, y0 + 116, "Cut along the grey line, fold on the red dashed lines into a triangle, glue the two GLUE tabs together.", 2.6, "#333", "Archivo", "start"))
-    body = (f'<div class="sheet" style="width:{W}mm;height:{H}mm;background:#fff"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {W} {H}" '
-            f'width="{W}mm" height="{H}mm">{"".join(o)}</svg></div>')
-    return bp.page("The Last Query - query tokens A4", W, H, body, ".sheet svg{display:block}")
+    b = [text(W - 12, 16, "SIDE 2 / 2 &#183; BACKS OF THE QUERY TOKENS", 5, NOIR, "Bungee", "end"),
+         text(W - 12, 21, "Mirrored on purpose: each back lands behind its front when you flip on the long edge.", 2.6, "#555", "Archivo", "end")]
+    for (cx, cy), code in zip(GRID, TOKEN_CODES):
+        b.append(query_token_back(W - cx, cy, code))
+    return _page("The Last Query - query tokens A4 duplex", [_sheet(o), _sheet(b)])
+
+
+def tokens_glue_sheet():
+    """One-sided A4 (playtest 1): fronts on top, backs below, same order. Glue a front and its back on each side of the card."""
+    o = [text(12, 16, "THE LAST QUERY &#183; QUERY TOKENS &#183; GLUE VERSION", 5, NOIR, "Bungee", "start"),
+         text(12, 21, "One-sided, 100 %. Glue the FRONTS on one side of a 1.5 mm card and the BACKS on the other side, then cut. Bleed 3 mm.", 2.6, "#555", "Archivo", "start"),
+         text(12, 30, "FRONTS &#215; 20 &#183; &#216; 20 MM", 2.8, RED, "Silkscreen", "start")]
+    for cx, cy in GRID:
+        o.append(query_token_front(cx, cy))
+    dy = 4 * 26 + 30
+    o.append(text(12, 30 + dy, "BACKS &#215; 20 &#183; SAME ORDER AS THE FRONTS (Q-01 TOP LEFT)", 2.8, RED, "Silkscreen", "start"))
+    for (cx, cy), code in zip(GRID, TOKEN_CODES):
+        o.append(query_token_back(cx, cy + dy, code))
+    o.append(text(12, 290, "Any back can go with any front: the code only matters on the back.", 2.6, "#333", "Archivo", "start"))
+    return _page("The Last Query - query tokens A4 glue", [_sheet(o)])
 
 
 def notebook():
@@ -220,5 +279,6 @@ def notebook():
 
 if __name__ == "__main__":
     (bp.SRC / "tokens_A4.html").write_text(tokens_sheet())
+    (bp.SRC / "tokens_A4_glue.html").write_text(tokens_glue_sheet())
     (bp.SRC / "notebook_A5.html").write_text(notebook())
     print("tokens + notebook written")

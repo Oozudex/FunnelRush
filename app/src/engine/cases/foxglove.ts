@@ -50,7 +50,7 @@ const L = 'Library', G = 'Greenhouse', O = 'Observatory', C = 'Chapel', M = 'Mus
 const clue = (room: string, object: string, reveal: string, condition: CardDef['condition']): CardDef => ({ room, object, type: 'clue', reveal, condition });
 const fake = (room: string, object: string, reveal: string, condition: CardDef['condition']): CardDef => ({ room, object, type: 'planted', reveal, condition });
 const dead = (room: string, object: string, reveal: string): CardDef => ({ room, object, type: 'deadend', reveal });
-const battery = (room: string): CardDef => ({ room, object: 'Spare Battery', type: 'bonus', bonus: 'token', reveal: '+1 Query Token (max 3).' });
+const battery = (room: string): CardDef => ({ room, object: 'Spare Battery', type: 'bonus', bonus: 'token', reveal: 'Take 1 Query Token from the reserve (max 3).' });
 const shoes = (room: string): CardDef => ({ room, object: 'Running Shoes', type: 'bonus', bonus: 'move', reveal: 'Move again: up to 2 more rooms this turn.' });
 
 const cards: Record<string, CardDef> = {

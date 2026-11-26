@@ -33,7 +33,7 @@ function dispatch(g: Game, me: string, event: string, args: any[]): unknown {
     case 'game:start': return g.start(me);
     case 'card:scan': return g.scan(me, String(args[0] ?? ''));
     case 'bonus:play': return g.playBonus(me, String(args[0] ?? ''));
-    case 'query:run': return g.query(me, args[0] as Condition[]);
+    case 'query:run': return g.query(me, args[0] as Condition[], String(args[1] ?? ''));
     case 'turn:end': return g.endTurn(me);
     case 'round:end': return g.endRound(me);
     case 'token:recharge': return g.recharge(me);

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { buzz, persist, store } from '../socket';
-import { Bar, clockFor, Icon, PawnIcon, Sheet, Tokens, useGame, useMe } from '../ui';
+import { Bar, clockFor, Icon, PawnIcon, Sheet, useGame, useMe } from '../ui';
 import Play from './Play';
 import Clues from './Clues';
 import Notebook, { type NotebookState } from './Notebook';
@@ -77,7 +77,6 @@ export default function GameScreen() {
             <div className="clock">{clockFor(game.round)}</div>
           </div>
           <div className="row" style={{ gap: 6 }}>
-            <Tokens n={me.tokens} max={game.caseInfo.maxTokens} />
             <button className="iconbtn" onClick={() => setMenu(true)} aria-label="Game info and settings">{Icon.menu}</button>
           </div>
         </div>
@@ -119,7 +118,7 @@ export default function GameScreen() {
             <p className="title t2">{showUpdate.text}</p>
             <div className="row note">
               <span className="tok">;</span>
-              <span className="small"><b>+1 Query Token for everyone</b> (max 3). Take one from the reserve.</span>
+              <span className="small"><b>Everyone takes 1 Query Token from the reserve</b> (max 3).</span>
             </div>
             <button className="btn primary big block" onClick={closeUpdate}>Got it</button>
           </div>
@@ -134,7 +133,7 @@ export default function GameScreen() {
             {accuser?.id === me.id ? (
               <>
                 <p className="typed center" style={{ fontSize: 18 }}>{acc.suspectName} is innocent.</p>
-                <div className="note small">Move your pawn back to the <b>Grand Hall</b> and give back <b>all your tokens</b>. You stay in the game.</div>
+                <div className="note small">Move your pawn back to the <b>Grand Hall</b> and put <b>all your Query Tokens back in the reserve</b>. You stay in the game.</div>
               </>
             ) : (
               <p className="typed center" style={{ fontSize: 17 }}>
